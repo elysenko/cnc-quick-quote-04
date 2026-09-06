@@ -41,6 +41,15 @@ export class AdminMaterialsComponent {
   private readonly route = inject(ActivatedRoute);
 
   readonly materials = this.catalog.materials;
+  readonly loading = this.catalog.loading;
+  readonly loadError = this.catalog.loadError;
+  readonly saving = signal(false);
+  readonly saveError = signal<string | null>(null);
+
+  constructor() {
+    // Admin read includes inactive rows so they can be switched back on.
+    void this.catalog.loadAllMaterials();
+  }
 
   private readonly params = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
@@ -112,23 +121,36 @@ export class AdminMaterialsComponent {
     void this.setParams(null, null);
   }
 
-  save(): void {
-    if (this.formError()) return;
+  async save(): Promise<void> {
+    if (this.formError() || this.saving()) return;
     const form = this.form();
-    if (this.mode() === 'edit') {
-      const id = this.targetId();
-      this.materials.update((list) => list.map((m) => (m.id === id ? { ...m, ...form } : m)));
-    } else {
-      const id = `mat_${Date.now().toString(36)}`;
-      this.materials.update((list) => [...list, { id, ...form }]);
+    const id = this.targetId();
+    this.saving.set(true);
+    this.saveError.set(null);
+    try {
+      if (this.mode() === 'edit' && id) await this.catalog.updateMaterial(id, form);
+      else await this.catalog.createMaterial(form);
+      this.close();
+    } catch (error) {
+      this.saveError.set((error as Error).message);
+    } finally {
+      this.saving.set(false);
     }
-    this.close();
   }
 
-  confirmDelete(): void {
+  async confirmDelete(): Promise<void> {
     const id = this.targetId();
-    this.materials.update((list) => list.filter((m) => m.id !== id));
-    this.close();
+    if (!id || this.saving()) return;
+    this.saving.set(true);
+    this.saveError.set(null);
+    try {
+      await this.catalog.deleteMaterial(id);
+      this.close();
+    } catch (error) {
+      this.saveError.set((error as Error).message);
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   private setParams(modal: string | null, id: string | null): Promise<boolean> {

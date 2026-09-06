@@ -1,17 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
+import { ApiService } from '../../core/api.service';
 import { BrandingService } from '../../core/branding.service';
 import { CatalogService } from '../../core/catalog.service';
-import { Address, ShippingMethod } from '../../core/models';
+import { Quote, ShippingMethod } from '../../core/models';
 import { OrdersService } from '../../core/orders.service';
 import { MoneyPipe } from '../../shared/money.pipe';
 import { StatePanelComponent } from '../../shared/state-panel.component';
-
-const BLANK_ADDRESS: Address = {
-  line1: '', line2: '', city: '', region: '', postalCode: '', country: '',
-};
 
 /** Checkout step 2 — delivery method and address. Blocks payment when nothing is priceable. */
 @Component({
@@ -25,6 +22,7 @@ const BLANK_ADDRESS: Address = {
 export class ShippingComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly api = inject(ApiService);
   private readonly orders = inject(OrdersService);
   private readonly catalog = inject(CatalogService);
   private readonly branding = inject(BrandingService);
@@ -34,13 +32,19 @@ export class ShippingComponent {
     { initialValue: this.route.snapshot.paramMap.get('quoteId') ?? '' },
   );
 
-  readonly quote = computed(() => this.orders.quoteById(this.quoteId()));
+  private readonly fetched = signal<Quote | null>(null);
+  readonly quote = computed(
+    () => this.orders.quoteById(this.quoteId()) ?? this.fetched(),
+  );
   readonly business = computed(() => this.branding.current());
 
   /** Per-sheet rates bill against the nest, so the sheet count drives the price. */
-  readonly sheets = computed(() => this.quote()?.nesting.sheets ?? 1);
+  readonly sheets = computed(() => this.quote()?.nesting?.sheets ?? 1);
 
-  /** Reviewer switch so the blocked state is reachable without touching the catalogue. */
+  /**
+   * Reviewer switch for the blocked state. Compiled out of production bundles —
+   * a live customer's shipping options always mirror the carrier table exactly.
+   */
   readonly previewEmpty = signal(false);
 
   readonly methods = computed<ShippingMethod[]>(() =>
@@ -48,6 +52,8 @@ export class ShippingComponent {
   );
 
   readonly selectedId = signal('');
+  readonly submitError = signal<string | null>(null);
+  readonly submitting = signal(false);
 
   /** Falls back to the cheapest-listed method so the summary is never blank. */
   readonly selected = computed<ShippingMethod | null>(() => {
@@ -57,29 +63,61 @@ export class ShippingComponent {
 
   readonly blocked = computed(() => this.methods().length === 0);
   readonly shippingCents = computed(() => this.selected()?.computedCents ?? 0);
-  readonly grandTotalCents = computed(() => (this.quote()?.totalCents ?? 0) + this.shippingCents());
-  readonly canContinue = computed(() => !this.blocked() && this.selected() !== null);
+  readonly grandTotalCents = computed(
+    () => (this.quote()?.totalCents ?? 0) + this.shippingCents(),
+  );
 
-  /** The customer's saved delivery addresses — replaced by `addresses.list` later. */
-  readonly savedAddresses = signal<Address[]>([
-    {
-      line1: '88 Kestrel Way',
-      line2: 'Unit 4',
-      city: 'Beaverton',
-      region: 'OR',
-      postalCode: '97005',
-      country: 'United States',
-    },
-  ]);
+  readonly line1 = signal('');
+  readonly line2 = signal('');
+  readonly city = signal('');
+  readonly region = signal('');
+  readonly postalCode = signal('');
+  readonly country = signal('');
 
-  private readonly prefill = this.savedAddresses()[0] ?? BLANK_ADDRESS;
+  readonly addressComplete = computed(
+    () =>
+      this.line1().trim().length > 0 &&
+      this.city().trim().length > 0 &&
+      this.postalCode().trim().length > 0 &&
+      this.country().trim().length > 0,
+  );
 
-  readonly line1 = signal(this.prefill.line1);
-  readonly line2 = signal(this.prefill.line2);
-  readonly city = signal(this.prefill.city);
-  readonly region = signal(this.prefill.region);
-  readonly postalCode = signal(this.prefill.postalCode);
-  readonly country = signal(this.prefill.country);
+  readonly canContinue = computed(
+    () => !this.blocked() && this.selected() !== null && this.addressComplete() && !this.submitting(),
+  );
+
+  constructor() {
+    void this.branding.load();
+
+    effect(() => {
+      const id = this.quoteId();
+      untracked(() => void this.hydrate(id));
+    });
+
+    // Rates depend on the nest, so they are re-read once the quote's sheet count is known.
+    effect(() => {
+      const sheets = this.sheets();
+      untracked(() => void this.catalog.loadShipping(sheets, true));
+    });
+  }
+
+  /** Restores any delivery choice already saved against this quote, so a reload keeps it. */
+  private async hydrate(id: string): Promise<void> {
+    if (!id) return;
+    const quote = this.orders.quoteById(id) ?? (await this.orders.fetchQuote(id));
+    this.fetched.set(quote);
+    if (!quote) return;
+    if (quote.shippingMethodId) this.selectedId.set(quote.shippingMethodId);
+    const address = quote.shippingAddress;
+    if (address) {
+      this.line1.set(address.line1);
+      this.line2.set(address.line2);
+      this.city.set(address.city);
+      this.region.set(address.region);
+      this.postalCode.set(address.postalCode);
+      this.country.set(address.country);
+    }
+  }
 
   rateLabel(method: ShippingMethod): string {
     return method.rateType === 'FLAT'
@@ -92,11 +130,38 @@ export class ShippingComponent {
   }
 
   toggleEmpty(): void {
+    if (!COLOSSUS_PREVIEW) return;
     this.previewEmpty.update((on) => !on);
   }
 
-  continueToPayment(): void {
-    if (!this.canContinue()) return;
-    void this.router.navigate(['/checkout', this.quoteId(), 'payment']);
+  /** Persists the choice on the quote, so payment charges exactly what was picked. */
+  async continueToPayment(): Promise<void> {
+    const quote = this.quote();
+    const method = this.selected();
+    if (!quote || !method || !this.canContinue()) return;
+
+    this.submitting.set(true);
+    this.submitError.set(null);
+    try {
+      const updated = await this.api.put<Quote>(
+        `/quotes/${encodeURIComponent(quote.id)}/shipping`,
+        {
+          shippingMethodId: method.id,
+          line1: this.line1().trim(),
+          line2: this.line2().trim(),
+          city: this.city().trim(),
+          region: this.region().trim(),
+          postalCode: this.postalCode().trim(),
+          country: this.country().trim(),
+        },
+      );
+      this.orders.addQuote(updated);
+      this.fetched.set(updated);
+      await this.router.navigate(['/checkout', quote.id, 'payment']);
+    } catch (error) {
+      this.submitError.set((error as Error).message);
+    } finally {
+      this.submitting.set(false);
+    }
   }
 }

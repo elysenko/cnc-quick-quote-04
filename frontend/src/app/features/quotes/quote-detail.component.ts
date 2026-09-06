@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
@@ -34,7 +34,22 @@ export class QuoteDetailComponent {
   });
 
   readonly quoteId = computed(() => this.params().get('id') ?? '');
-  readonly quote = computed<Quote | null>(() => this.orders.quoteById(this.quoteId()));
+
+  private readonly fetched = signal<Quote | null>(null);
+  readonly quote = computed<Quote | null>(
+    () => this.orders.quoteById(this.quoteId()) ?? this.fetched(),
+  );
+
+  constructor() {
+    effect(() => {
+      const id = this.quoteId();
+      untracked(() => {
+        if (id && !this.orders.quoteById(id)) {
+          void this.orders.fetchQuote(id).then((quote) => this.fetched.set(quote));
+        }
+      });
+    });
+  }
 
   readonly panelOpen = computed(() => this.query().get('panel') === 'nesting');
 

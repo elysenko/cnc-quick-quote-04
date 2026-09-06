@@ -1,13 +1,19 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { ACCESS_TOKEN_KEY, ApiError, ApiService, REFRESH_TOKEN_KEY } from './api.service';
 import { SessionUser } from './models';
-import { readJson, removeKeys, writeJson } from './storage';
+import { readJson, readRaw, removeKeys, writeJson, writeRaw } from './storage';
 
 const USER_KEY = 'user';
-const TOKEN_KEY = 'access_token';
 
 /** The authenticated landing screen. Used by login, the preview shortcut and guards. */
 export const HOME_ROUTE = '/quote/new/upload';
+
+interface AuthResponse {
+  user: SessionUser;
+  accessToken: string;
+  refreshToken: string;
+}
 
 function isSessionUser(value: unknown): value is SessionUser {
   if (typeof value !== 'object' || value === null) return false;
@@ -24,6 +30,7 @@ const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly router = inject(Router);
+  private readonly api = inject(ApiService);
 
   private readonly _user = signal<SessionUser | null>(null);
 
@@ -42,8 +49,9 @@ export class AuthService {
   }
 
   /**
-   * Restores a session from browser storage. Anything unrecognised is cleared and
-   * ignored — a bad value must never throw, because that would blank the page.
+   * Restores a session from browser storage, then revalidates it against the API.
+   * Anything unrecognised is cleared and ignored — a bad value must never throw,
+   * because that would blank the page.
    */
   private restore(): void {
     let restored: SessionUser | null = null;
@@ -53,30 +61,49 @@ export class AuthService {
       restored = null;
     }
     if (!restored) {
-      removeKeys(USER_KEY, TOKEN_KEY);
+      removeKeys(USER_KEY, ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY);
       // In the static preview there is no API to authenticate against, so a cold
       // load of an authenticated route renders that screen rather than bouncing
       // to /login. /login itself stays reachable and never redirects.
       if (COLOSSUS_PREVIEW) restored = this.demoUser();
     }
     this._user.set(restored);
+    if (restored && !COLOSSUS_PREVIEW) void this.revalidate();
+  }
+
+  /** Confirms the stored session is still real; a revoked account is signed out. */
+  private async revalidate(): Promise<void> {
+    try {
+      const user = await this.api.get<SessionUser>('/auth/me');
+      this._user.set(user);
+      writeJson(USER_KEY, user);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) this.clearSession();
+    }
   }
 
   private demoUser(): SessionUser {
     return { id: 'usr_demo', email: 'demo.customer@example.com', name: 'Dana Reyes', role: 'ADMIN' };
   }
 
-  private persist(user: SessionUser): void {
-    writeJson(USER_KEY, user);
-    writeJson(TOKEN_KEY, `preview.${user.id}`);
-    this._user.set(user);
+  private persist(result: AuthResponse): void {
+    writeJson(USER_KEY, result.user);
+    writeRaw(ACCESS_TOKEN_KEY, result.accessToken);
+    writeRaw(REFRESH_TOKEN_KEY, result.refreshToken);
+    this._user.set(result.user);
     this.error.set(null);
+  }
+
+  private clearSession(): void {
+    removeKeys(USER_KEY, ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY);
+    this._user.set(null);
   }
 
   /** Seeds the signed-in state directly and lands on the authenticated home. No credentials needed. */
   previewSignIn(): void {
     if (!COLOSSUS_PREVIEW) return;
-    this.persist(this.demoUser());
+    writeJson(USER_KEY, this.demoUser());
+    this._user.set(this.demoUser());
     void this.router.navigateByUrl(HOME_ROUTE);
   }
 
@@ -94,18 +121,26 @@ export class AuthService {
     if (COLOSSUS_PREVIEW) {
       // Resolved locally and synchronously: the preview host has no API server,
       // so any network call here would strand the reviewer on this screen.
-      this.persist({ ...this.demoUser(), email: email.trim() });
+      writeJson(USER_KEY, { ...this.demoUser(), email: email.trim() });
+      this._user.set({ ...this.demoUser(), email: email.trim() });
       void this.router.navigateByUrl(HOME_ROUTE);
       return;
     }
 
     this.pending.set(true);
     try {
-      const user = await this.authenticate(email.trim(), password);
-      this.persist(user);
-      void this.router.navigateByUrl(HOME_ROUTE);
-    } catch {
-      this.error.set('Email or password is incorrect.');
+      const result = await this.api.post<AuthResponse>('/auth/login', {
+        email: email.trim(),
+        password,
+      });
+      this.persist(result);
+      void this.router.navigateByUrl(this.returnUrl());
+    } catch (error) {
+      this.error.set(
+        error instanceof ApiError && error.status !== 401
+          ? error.message
+          : 'Email or password is incorrect.',
+      );
     } finally {
       this.pending.set(false);
     }
@@ -131,36 +166,48 @@ export class AuthService {
     }
 
     if (COLOSSUS_PREVIEW) {
-      this.persist({ ...this.demoUser(), name: name.trim(), email: email.trim() });
+      const user = { ...this.demoUser(), name: name.trim(), email: email.trim() };
+      writeJson(USER_KEY, user);
+      this._user.set(user);
       void this.router.navigateByUrl(HOME_ROUTE);
       return;
     }
 
     this.pending.set(true);
     try {
-      const user = await this.register(name.trim(), email.trim(), password);
-      this.persist(user);
+      const result = await this.api.post<AuthResponse>('/auth/register', {
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      });
+      this.persist(result);
       void this.router.navigateByUrl(HOME_ROUTE);
-    } catch {
-      this.error.set('That email address is already registered.');
+    } catch (error) {
+      this.error.set(
+        error instanceof ApiError
+          ? error.message
+          : 'That email address is already registered.',
+      );
     } finally {
       this.pending.set(false);
     }
   }
 
   logout(): void {
-    removeKeys(USER_KEY, TOKEN_KEY);
-    this._user.set(null);
+    // Revoke server-side, but never block the redirect on it.
+    if (!COLOSSUS_PREVIEW) {
+      void this.api
+        .post('/auth/logout', { refreshToken: readRaw(REFRESH_TOKEN_KEY) })
+        .catch(() => undefined);
+    }
+    this.clearSession();
     void this.router.navigateByUrl('/login');
   }
 
-  /** Replaced by the service layer with the real `auth.login` tRPC call. */
-  private authenticate(email: string, _password: string): Promise<SessionUser> {
-    return Promise.reject(new Error(`auth.login not wired for ${email}`));
-  }
-
-  /** Replaced by the service layer with the real `auth.register` tRPC call. */
-  private register(name: string, email: string, _password: string): Promise<SessionUser> {
-    return Promise.reject(new Error(`auth.register not wired for ${name} <${email}>`));
+  /** Honours `?returnUrl=` set by the auth guard, falling back to the wizard. */
+  private returnUrl(): string {
+    if (typeof location === 'undefined') return HOME_ROUTE;
+    const requested = new URLSearchParams(location.search).get('returnUrl');
+    return requested && requested.startsWith('/') ? requested : HOME_ROUTE;
   }
 }

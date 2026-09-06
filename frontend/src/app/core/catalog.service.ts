@@ -1,23 +1,78 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { ApiService } from './api.service';
 import { Material, ShippingMethod } from './models';
 
-/** Materials and shipping methods — `materials.list` and `shippingMethods.list`. */
+/** Materials and shipping methods — `GET /api/materials` and `GET /api/shipping-methods`. */
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
-  readonly materials = signal<Material[]>([
-    { id: 'mat_ms16', name: 'Mild steel 1.6 mm', thicknessMm: 1.6, sheetWMm: 1250, sheetHMm: 2500, costMultiplier: 1, isActive: true },
-    { id: 'mat_ms30', name: 'Mild steel 3.0 mm', thicknessMm: 3, sheetWMm: 1250, sheetHMm: 2500, costMultiplier: 1.45, isActive: true },
-    { id: 'mat_ss20', name: 'Stainless 304, 2.0 mm', thicknessMm: 2, sheetWMm: 1000, sheetHMm: 2000, costMultiplier: 2.35, isActive: true },
-    { id: 'mat_al30', name: 'Aluminium 5052, 3.0 mm', thicknessMm: 3, sheetWMm: 1250, sheetHMm: 2500, costMultiplier: 1.9, isActive: true },
-    { id: 'mat_br15', name: 'Brass C260, 1.5 mm', thicknessMm: 1.5, sheetWMm: 900, sheetHMm: 1800, costMultiplier: 3.1, isActive: false },
-  ]);
+  private readonly api = inject(ApiService);
 
-  readonly shippingMethods = signal<ShippingMethod[]>([
-    { id: 'shp_std', name: 'Standard freight', rateType: 'FLAT', amountCents: 2400, computedCents: 2400, estDeliveryDays: 6, isActive: true },
-    { id: 'shp_exp', name: 'Express courier', rateType: 'FLAT', amountCents: 5900, computedCents: 5900, estDeliveryDays: 2, isActive: true },
-    { id: 'shp_pal', name: 'Palletised, per sheet', rateType: 'PER_SHEET', amountCents: 1850, computedCents: 1850, estDeliveryDays: 4, isActive: true },
-    { id: 'shp_pick', name: 'Collect from workshop', rateType: 'FLAT', amountCents: 0, computedCents: 0, estDeliveryDays: 1, isActive: false },
-  ]);
+  readonly materials = signal<Material[]>([]);
+  readonly shippingMethods = signal<ShippingMethod[]>([]);
+
+  readonly loading = signal(false);
+  readonly loadError = signal<string | null>(null);
+
+  private materialsLoaded = false;
+  private shippingLoaded = false;
+
+  /** Customer-facing read: the API only ever returns rows the shop has switched on. */
+  async loadMaterials(force = false): Promise<void> {
+    if (this.materialsLoaded && !force) return;
+    this.loading.set(true);
+    this.loadError.set(null);
+    try {
+      this.materials.set(await this.api.get<Material[]>('/materials'));
+      this.materialsLoaded = true;
+    } catch (error) {
+      this.loadError.set((error as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  /** Admin read: includes inactive rows so the console can switch them back on. */
+  async loadAllMaterials(): Promise<void> {
+    this.loading.set(true);
+    this.loadError.set(null);
+    try {
+      this.materials.set(await this.api.get<Material[]>('/admin/materials'));
+      this.materialsLoaded = true;
+    } catch (error) {
+      this.loadError.set((error as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async loadShipping(sheets = 1, force = false): Promise<void> {
+    if (this.shippingLoaded && !force) return;
+    this.loading.set(true);
+    this.loadError.set(null);
+    try {
+      this.shippingMethods.set(
+        await this.api.get<ShippingMethod[]>('/shipping-methods', { sheets }),
+      );
+      this.shippingLoaded = true;
+    } catch (error) {
+      this.loadError.set((error as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async loadAllShipping(): Promise<void> {
+    this.loading.set(true);
+    this.loadError.set(null);
+    try {
+      this.shippingMethods.set(await this.api.get<ShippingMethod[]>('/admin/shipping-methods'));
+      this.shippingLoaded = true;
+    } catch (error) {
+      this.loadError.set((error as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
 
   activeMaterials(): Material[] {
     return this.materials().filter((m) => m.isActive);
@@ -29,7 +84,48 @@ export class CatalogService {
       .filter((m) => m.isActive)
       .map((m) => ({
         ...m,
-        computedCents: m.rateType === 'PER_SHEET' ? m.amountCents * Math.max(1, sheets) : m.amountCents,
+        computedCents:
+          m.rateType === 'PER_SHEET' ? m.amountCents * Math.max(1, sheets) : m.amountCents,
       }));
   }
+
+  // --- Admin writes --------------------------------------------------------
+
+  async createMaterial(body: Omit<Material, 'id'>): Promise<void> {
+    await this.api.post('/admin/materials', body);
+    await this.loadAllMaterials();
+  }
+
+  async updateMaterial(id: string, body: Omit<Material, 'id'>): Promise<void> {
+    await this.api.put(`/admin/materials/${id}`, body);
+    await this.loadAllMaterials();
+  }
+
+  async deleteMaterial(id: string): Promise<void> {
+    await this.api.delete(`/admin/materials/${id}`);
+    await this.loadAllMaterials();
+  }
+
+  async createShippingMethod(body: ShippingWrite): Promise<void> {
+    await this.api.post('/admin/shipping-methods', body);
+    await this.loadAllShipping();
+  }
+
+  async updateShippingMethod(id: string, body: ShippingWrite): Promise<void> {
+    await this.api.put(`/admin/shipping-methods/${id}`, body);
+    await this.loadAllShipping();
+  }
+
+  async deleteShippingMethod(id: string): Promise<void> {
+    await this.api.delete(`/admin/shipping-methods/${id}`);
+    await this.loadAllShipping();
+  }
+}
+
+export interface ShippingWrite {
+  name: string;
+  rateType: 'FLAT' | 'PER_SHEET';
+  amountCents: number;
+  estDeliveryDays: number;
+  isActive: boolean;
 }

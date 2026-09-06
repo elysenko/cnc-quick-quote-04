@@ -1,38 +1,50 @@
 import 'reflect-metadata';
-import { NestFactory, NestApplication } from '@nestjs/core';
-import { Logger } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { NestFactory } from '@nestjs/core';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/errors';
 
 async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create<NestApplication>(AppModule, {
-    logger: ['log', 'error', 'warn', 'debug', 'verbose'],
+  const app = await NestFactory.create(AppModule, {
+    // The Stripe webhook verifies its signature over the exact bytes received.
+    rawBody: true,
+    logger: ['log', 'error', 'warn'],
   });
 
-  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:4200';
+  // Everything the SPA calls lives under /api — nginx proxies that prefix through.
+  app.setGlobalPrefix('api');
+
+  const frontendUrl = process.env.FRONTEND_URL;
   app.enableCors({
-    origin: frontendUrl,
+    origin: frontendUrl ? frontendUrl.split(',').map((entry) => entry.trim()) : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      // 422, not 400: a well-formed request whose values fail the domain rules.
+      errorHttpStatusCode: 422,
+    }),
+  );
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Template Enterprise API')
-    .setDescription('NestJS + tRPC backend API')
+    .setTitle('CNC Quick Quote API')
+    .setDescription('Instant quoting, nesting, checkout and admin configuration.')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
+  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, swaggerConfig));
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
-
-  const port = parseInt(process.env.PORT ?? '3000', 10);
-  await app.listen(port);
-  logger.log(`Application running on http://localhost:${port}`);
-  logger.log(`Swagger docs at http://localhost:${port}/api/docs`);
-  logger.log(`tRPC endpoint at http://localhost:${port}/trpc`);
+  const port = Number.parseInt(process.env.PORT ?? '3000', 10);
+  await app.listen(port, '0.0.0.0');
+  logger.log(`CNC Quick Quote API listening on :${port} (docs at /api/docs)`);
 }
 
-bootstrap();
+void bootstrap();

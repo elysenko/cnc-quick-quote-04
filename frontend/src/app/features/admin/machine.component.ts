@@ -48,8 +48,11 @@ export class AdminMachineComponent implements OnDestroy {
     () => this.quantityError() !== null || this.extensionsError() !== null || this.marginError() !== null,
   );
 
+  readonly saveError = signal<string | null>(null);
+  readonly saving = signal(false);
+
   constructor() {
-    this.reset();
+    void this.config.load().then(() => this.reset());
   }
 
   reset(): void {
@@ -68,8 +71,8 @@ export class AdminMachineComponent implements OnDestroy {
     this.saved.set(false);
   }
 
-  save(): void {
-    if (this.invalid()) return;
+  async save(): Promise<void> {
+    if (this.invalid() || this.saving()) return;
     const next: MachineConfig = {
       bedWMm: this.num(this.bedW()),
       bedHMm: this.num(this.bedH()),
@@ -81,8 +84,16 @@ export class AdminMachineComponent implements OnDestroy {
       qtyMin: Math.round(this.qtyMin()),
       qtyMax: Math.round(this.qtyMax()),
     };
-    this.config.machineConfig.update((rows) => [next, ...rows.slice(1)]);
-    this.flagSaved();
+    this.saving.set(true);
+    this.saveError.set(null);
+    try {
+      await this.config.saveMachine(next);
+      this.flagSaved();
+    } catch (error) {
+      this.saveError.set((error as Error).message);
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   num(value: unknown): number {

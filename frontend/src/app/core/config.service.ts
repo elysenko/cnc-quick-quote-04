@@ -1,55 +1,160 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { ApiService } from './api.service';
 import { IntegrationSetting, MachineConfig, PaymentConfig, PricingConfig } from './models';
 
-/** The `id = 1` singleton config rows plus the service/integration credential registry. */
+/**
+ * The `id = 1` singleton config rows plus the service/integration credential registry.
+ *
+ * The defaults below are what the screens render for the instant before the first
+ * response lands; every one of them is replaced by the API on load, and every save
+ * goes back to the API. They exist so a slow network shows a laid-out form rather
+ * than a blank one — the wizard's own guards refuse to price until real values arrive.
+ */
+const PENDING_PRICING: PricingConfig = {
+  costPerLinearFtCents: 0,
+  setupFeeCents: 0,
+  handlingFeeCents: 0,
+  minOrderCents: 0,
+  costPerBendCents: 0,
+};
+
+const PENDING_MACHINE: MachineConfig = {
+  bedWMm: 0,
+  bedHMm: 0,
+  spacingMm: 0,
+  marginMm: 0,
+  animationSpeed: 1,
+  allowedExtensions: ['.dxf'],
+  maxUploadBytes: 0,
+  qtyMin: 1,
+  qtyMax: 1,
+};
+
+const PENDING_PAYMENT: PaymentConfig = {
+  stripePublishableKey: '',
+  stripeSecretKeyMasked: '',
+  stripeWebhookSecretMasked: '',
+  sandboxMode: true,
+};
+
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
-  readonly pricingConfig = signal<PricingConfig[]>([
-    {
-      costPerLinearFtCents: 285,
-      setupFeeCents: 3500,
-      handlingFeeCents: 1200,
-      minOrderCents: 7500,
-      costPerBendCents: 140,
-    },
-  ]);
+  private readonly api = inject(ApiService);
 
-  readonly machineConfig = signal<MachineConfig[]>([
-    {
-      bedWMm: 1500,
-      bedHMm: 3000,
-      spacingMm: 8,
-      marginMm: 12,
-      animationSpeed: 1.4,
-      allowedExtensions: ['.dxf'],
-      maxUploadBytes: 10 * 1024 * 1024,
-      qtyMin: 1,
-      qtyMax: 500,
-    },
-  ]);
+  readonly pricingConfig = signal<PricingConfig[]>([PENDING_PRICING]);
+  readonly machineConfig = signal<MachineConfig[]>([PENDING_MACHINE]);
+  readonly paymentConfig = signal<PaymentConfig[]>([PENDING_PAYMENT]);
+  readonly integrationSettings = signal<IntegrationSetting[]>([]);
 
-  readonly paymentConfig = signal<PaymentConfig[]>([
-    {
-      stripePublishableKey: '',
-      stripeSecretKeyMasked: '',
-      stripeWebhookSecretMasked: '',
-      sandboxMode: true,
-    },
-  ]);
+  /** True once the machine/pricing singletons have actually come back from the API. */
+  readonly ready = signal(false);
+  readonly saveError = signal<string | null>(null);
 
-  readonly integrationSettings = signal<IntegrationSetting[]>([
-    { key: 'POSTGRESQL_API_KEY', label: 'PostgreSQL', kind: 'service', sdk: 'Primary datastore', maskedValue: '••••••••3f2a', configured: true },
-    { key: 'MINIO_S3_COMPATIBLE_OBJECT_STORAGE_MINIO_SDK_API_KEY', label: 'MinIO / S3-compatible object storage', kind: 'service', sdk: 'minio SDK', maskedValue: '', configured: false },
-    { key: 'REDIS_API_KEY', label: 'Redis', kind: 'integration', sdk: 'Rate limits and token denylist', maskedValue: '', configured: false },
-    { key: 'RESEND_API_RESEND_SDK_API_KEY', label: 'Resend API', kind: 'integration', sdk: 'resend SDK', maskedValue: '', configured: false },
-    { key: 'STRIPE_PYTHON_SDK_STRIPECLIENT_V15_6_API_KEY', label: 'Stripe Python SDK', kind: 'integration', sdk: 'StripeClient, v15.6', maskedValue: '', configured: false },
-  ]);
+  private loading: Promise<void> | null = null;
 
-  pricing(): PricingConfig { return this.pricingConfig()[0]; }
-  machine(): MachineConfig { return this.machineConfig()[0]; }
-  payment(): PaymentConfig { return this.paymentConfig()[0]; }
+  /** Idempotent: concurrent callers share one in-flight load. */
+  load(force = false): Promise<void> {
+    if (this.loading && !force) return this.loading;
+    if (this.ready() && !force) return Promise.resolve();
+    this.loading = this.fetchAll().finally(() => {
+      this.loading = null;
+    });
+    return this.loading;
+  }
+
+  private async fetchAll(): Promise<void> {
+    try {
+      const [pricing, machine] = await Promise.all([
+        this.api.get<PricingConfig>('/config/pricing'),
+        this.api.get<MachineConfig>('/config/machine'),
+      ]);
+      this.pricingConfig.set([pricing]);
+      this.machineConfig.set([machine]);
+      this.ready.set(true);
+    } catch {
+      // Leave the pending defaults in place; the caller surfaces its own error state.
+    }
+  }
+
+  async loadPayment(): Promise<void> {
+    try {
+      this.paymentConfig.set([await this.api.get<PaymentConfig>('/config/payment')]);
+    } catch {
+      /* the payment screen renders its unavailable state */
+    }
+  }
+
+  async loadIntegrations(): Promise<void> {
+    try {
+      this.integrationSettings.set(await this.api.get<IntegrationSetting[]>('/admin/settings'));
+    } catch {
+      this.integrationSettings.set([]);
+    }
+  }
+
+  pricing(): PricingConfig {
+    return this.pricingConfig()[0];
+  }
+
+  machine(): MachineConfig {
+    return this.machineConfig()[0];
+  }
+
+  payment(): PaymentConfig {
+    return this.paymentConfig()[0];
+  }
 
   unconfigured(): IntegrationSetting[] {
     return this.integrationSettings().filter((s) => !s.configured);
+  }
+
+  // --- Admin writes --------------------------------------------------------
+
+  async savePricing(next: PricingConfig): Promise<void> {
+    this.saveError.set(null);
+    try {
+      this.pricingConfig.set([await this.api.put<PricingConfig>('/admin/config/pricing', next)]);
+    } catch (error) {
+      this.saveError.set((error as Error).message);
+      throw error;
+    }
+  }
+
+  async saveMachine(next: MachineConfig): Promise<void> {
+    this.saveError.set(null);
+    try {
+      this.machineConfig.set([await this.api.put<MachineConfig>('/admin/config/machine', next)]);
+    } catch (error) {
+      this.saveError.set((error as Error).message);
+      throw error;
+    }
+  }
+
+  /** Blank secret fields are omitted so the stored value is kept, never overwritten. */
+  async savePayment(next: {
+    stripePublishableKey: string;
+    stripeSecretKey?: string;
+    stripeWebhookSecret?: string;
+    sandboxMode: boolean;
+  }): Promise<void> {
+    this.saveError.set(null);
+    try {
+      this.paymentConfig.set([await this.api.put<PaymentConfig>('/admin/config/payment', next)]);
+    } catch (error) {
+      this.saveError.set((error as Error).message);
+      throw error;
+    }
+  }
+
+  async saveIntegration(key: string, value: string): Promise<void> {
+    this.integrationSettings.set(
+      await this.api.put<IntegrationSetting[]>('/admin/settings', { key, value }),
+    );
+  }
+
+  async clearIntegration(key: string): Promise<void> {
+    this.integrationSettings.set(
+      await this.api.delete<IntegrationSetting[]>(`/admin/settings/${encodeURIComponent(key)}`),
+    );
   }
 }

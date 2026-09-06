@@ -34,8 +34,12 @@ export class AdminPricingComponent implements OnDestroy {
     Math.round(this.exampleFeet * this.toCents(this.costPerLinearFt())),
   );
 
+  readonly saveError = signal<string | null>(null);
+  readonly saving = signal(false);
+
   constructor() {
-    this.reset();
+    // Values come from the API; the form fills in as soon as they land.
+    void this.config.load().then(() => this.reset());
   }
 
   /** Re-reads the stored config, discarding anything typed since the last save. */
@@ -49,7 +53,8 @@ export class AdminPricingComponent implements OnDestroy {
     this.saved.set(false);
   }
 
-  save(): void {
+  async save(): Promise<void> {
+    if (this.saving()) return;
     const next: PricingConfig = {
       costPerLinearFtCents: this.toCents(this.costPerLinearFt()),
       setupFeeCents: this.toCents(this.setupFee()),
@@ -57,8 +62,16 @@ export class AdminPricingComponent implements OnDestroy {
       minOrderCents: this.toCents(this.minOrder()),
       costPerBendCents: this.toCents(this.costPerBend()),
     };
-    this.config.pricingConfig.update((rows) => [next, ...rows.slice(1)]);
-    this.flagSaved();
+    this.saving.set(true);
+    this.saveError.set(null);
+    try {
+      await this.config.savePricing(next);
+      this.flagSaved();
+    } catch (error) {
+      this.saveError.set((error as Error).message);
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   num(value: unknown): number {

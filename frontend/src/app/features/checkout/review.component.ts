@@ -1,8 +1,9 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
+import { Quote } from '../../core/models';
 import { OrdersService } from '../../core/orders.service';
 import { MoneyPipe } from '../../shared/money.pipe';
 import { StatePanelComponent } from '../../shared/state-panel.component';
@@ -27,7 +28,21 @@ export class ReviewComponent {
     { initialValue: this.route.snapshot.paramMap.get('quoteId') ?? '' },
   );
 
-  readonly quote = computed(() => this.orders.quoteById(this.quoteId()));
+  private readonly fetched = signal<Quote | null>(null);
+
+  /** Resolves from the cache when arriving from the wizard, from the API on a deep link. */
+  readonly quote = computed(() => this.orders.quoteById(this.quoteId()) ?? this.fetched());
+
+  constructor() {
+    effect(() => {
+      const id = this.quoteId();
+      untracked(() => {
+        if (id && !this.orders.quoteById(id)) {
+          void this.orders.fetchQuote(id).then((quote) => this.fetched.set(quote));
+        }
+      });
+    });
+  }
 
   /** Cut length is stored per part in millimetres; shops think in linear feet. */
   readonly perPartFt = computed(() => ((this.quote()?.cutLengthMm ?? 0) / MM_PER_FT).toFixed(2));

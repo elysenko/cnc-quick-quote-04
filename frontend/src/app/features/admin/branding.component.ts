@@ -44,8 +44,11 @@ export class AdminBrandingComponent implements OnDestroy {
   );
   readonly invalid = computed(() => this.primaryError() !== null || this.accentError() !== null);
 
+  readonly saveError = signal<string | null>(null);
+  readonly saving = signal(false);
+
   constructor() {
-    this.reset();
+    void this.brandingService.load().then(() => this.reset());
   }
 
   reset(): void {
@@ -67,8 +70,8 @@ export class AdminBrandingComponent implements OnDestroy {
     this.saved.set(false);
   }
 
-  save(): void {
-    if (this.invalid()) return;
+  async save(): Promise<void> {
+    if (this.invalid() || this.saving()) return;
     const next: BusinessConfig = {
       companyName: this.companyName().trim(),
       logoUrl: this.logoUrl().trim(),
@@ -84,9 +87,16 @@ export class AdminBrandingComponent implements OnDestroy {
       postalCode: this.postalCode().trim(),
       country: this.country().trim(),
     };
-    this.brandingService.branding.update((rows) => [next, ...rows.slice(1)]);
-    this.brandingService.apply();
-    this.flagSaved();
+    this.saving.set(true);
+    this.saveError.set(null);
+    try {
+      await this.brandingService.save(next);
+      this.flagSaved();
+    } catch (error) {
+      this.saveError.set((error as Error).message);
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   ngOnDestroy(): void {

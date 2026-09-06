@@ -41,3 +41,256 @@ model ColossusAccount {
 
   @@map("colossus_accounts")
 }
+
+// ---------------------------------------------------------------------------
+// CNC Quick Quote domain
+// Money is ALWAYS integer cents. Dimensions are ALWAYS millimetres.
+// ---------------------------------------------------------------------------
+
+enum BendDirection {
+  UP
+  DOWN
+}
+
+enum OrderStatus {
+  PAID
+  FULFILLED
+  CANCELLED
+}
+
+enum ShippingRateType {
+  FLAT
+  PER_SHEET
+}
+
+/// Opaque refresh-token handles. Logout revokes the row; expiry is enforced on read.
+model RefreshToken {
+  id        String    @id @default(uuid())
+  jti       String    @unique
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+/// Stock the workshop can cut. Admin-managed; an inactive row can never back a quote.
+model Material {
+  id             String   @id @default(uuid())
+  name           String
+  thicknessMm    Float
+  sheetWMm       Float
+  sheetHMm       Float
+  costMultiplier Float    @default(1)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("materials")
+}
+
+/// An uploaded + parsed DXF. The stored object is never mutated; bends live beside it.
+model Drawing {
+  id          String   @id @default(uuid())
+  userId      String
+  filename    String
+  sizeBytes   Int
+  storageKey  String
+  minX        Float
+  minY        Float
+  maxX        Float
+  maxY        Float
+  cutLengthMm Float
+  entityCount Int
+  /// Flattened polyline runs ([x0,y0,x1,y1,…] per entity) for the canvas preview.
+  paths       Json
+  createdAt   DateTime @default(now())
+
+  bends BendLine[]
+
+  @@index([userId])
+  @@map("drawings")
+}
+
+model BendLine {
+  id        String        @id @default(uuid())
+  drawingId String
+  startX    Float
+  startY    Float
+  endX      Float
+  endY      Float
+  angleDeg  Float
+  direction BendDirection @default(UP)
+  createdAt DateTime      @default(now())
+
+  drawing Drawing @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+
+  @@index([drawingId])
+  @@map("bend_lines")
+}
+
+/// A priced quote. `pricingSnapshot` freezes the config so later admin edits never move it.
+model Quote {
+  id              String   @id
+  userId          String
+  drawingId       String
+  drawingName     String
+  materialId      String
+  materialName    String
+  quantity        Int
+  cutLengthMm     Float
+  bendCount       Int
+  breakdown       Json
+  nesting         Json
+  pricingSnapshot Json
+  totalCents      Int
+  createdAt       DateTime @default(now())
+
+  // Chosen at checkout step 2, before the Stripe hand-off.
+  shippingMethodId String?
+  shippingCents    Int?
+  shipLine1        String?
+  shipLine2        String?
+  shipCity         String?
+  shipRegion       String?
+  shipPostalCode   String?
+  shipCountry      String?
+
+  orders Order[]
+
+  @@index([userId])
+  @@map("quotes")
+}
+
+model ShippingMethod {
+  id              String           @id @default(uuid())
+  name            String
+  rateType        ShippingRateType @default(FLAT)
+  amountCents     Int              @default(0)
+  estDeliveryDays Int              @default(5)
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("shipping_methods")
+}
+
+/// Created only by a verified Stripe webhook — never by the browser returning from checkout.
+model Order {
+  id                 String      @id @default(uuid())
+  orderNumber        String      @unique
+  confirmationNumber String      @unique
+  quoteId            String
+  userId             String
+  email              String
+  itemSummary        String
+  shippingMethodName String
+  shipLine1          String      @default("")
+  shipLine2          String      @default("")
+  shipCity           String      @default("")
+  shipRegion         String      @default("")
+  shipPostalCode     String      @default("")
+  shipCountry        String      @default("")
+  estDeliveryDays    Int         @default(5)
+  shippingCents      Int         @default(0)
+  totalCents         Int
+  status             OrderStatus @default(PAID)
+  stripeSessionId    String?     @unique
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  quote Quote @relation(fields: [quoteId], references: [id])
+
+  @@index([userId])
+  @@map("orders")
+}
+
+/// Stripe delivery idempotency key — the unique violation IS the "already processed" signal.
+model WebhookEvent {
+  id            String   @id @default(uuid())
+  stripeEventId String   @unique
+  type          String
+  createdAt     DateTime @default(now())
+
+  @@map("webhook_events")
+}
+
+/// Monotonic reference counters (quote refs, order numbers). Incremented atomically.
+model Counter {
+  name  String @id
+  value Int    @default(0)
+
+  @@map("counters")
+}
+
+/// Runtime credential store behind resolveConfig(): env var wins, this row is the fallback.
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+/// id is pinned to 1 — these are singletons, materialised with defaults on first read.
+model PricingConfig {
+  id                   Int      @id @default(1)
+  costPerLinearFtCents Int      @default(285)
+  setupFeeCents        Int      @default(3500)
+  handlingFeeCents     Int      @default(1200)
+  minOrderCents        Int      @default(7500)
+  costPerBendCents     Int      @default(140)
+  updatedAt            DateTime @updatedAt
+
+  @@map("pricing_config")
+}
+
+model MachineConfig {
+  id                Int      @id @default(1)
+  bedWMm            Float    @default(1500)
+  bedHMm            Float    @default(3000)
+  spacingMm         Float    @default(8)
+  marginMm          Float    @default(12)
+  animationSpeed    Float    @default(1.4)
+  allowedExtensions String[] @default([".dxf"])
+  maxUploadBytes    Int      @default(10485760)
+  qtyMin            Int      @default(1)
+  qtyMax            Int      @default(500)
+  updatedAt         DateTime @updatedAt
+
+  @@map("machine_config")
+}
+
+model BusinessConfig {
+  id           Int      @id @default(1)
+  companyName  String   @default("CNC Quick Quote")
+  logoUrl      String   @default("")
+  primaryColor String   @default("#2563eb")
+  accentColor  String   @default("#f97316")
+  contactEmail String   @default("")
+  contactPhone String   @default("")
+  supportHours String   @default("")
+  addressLine1 String   @default("")
+  addressLine2 String   @default("")
+  city         String   @default("")
+  region       String   @default("")
+  postalCode   String   @default("")
+  country      String   @default("")
+  updatedAt    DateTime @updatedAt
+
+  @@map("business_config")
+}
+
+/// Stripe credentials. Secrets are write-only over the API — only a mask is ever returned.
+model PaymentConfig {
+  id                   Int      @id @default(1)
+  stripePublishableKey String   @default("")
+  stripeSecretKey      String   @default("")
+  stripeWebhookSecret  String   @default("")
+  sandboxMode          Boolean  @default(true)
+  updatedAt            DateTime @updatedAt
+
+  @@map("payment_config")
+}

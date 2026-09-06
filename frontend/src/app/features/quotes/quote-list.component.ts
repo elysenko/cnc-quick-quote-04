@@ -31,8 +31,13 @@ export class QuoteListComponent {
   private readonly router = inject(Router);
   private readonly orders = inject(OrdersService);
 
-  /** Set while `quotes.list` is in flight; the service already holds the rows. */
-  readonly loading = signal(false);
+  /** Set while `GET /api/quotes` is in flight. */
+  readonly loading = this.orders.quotesLoading;
+  readonly loadError = this.orders.quotesError;
+
+  constructor() {
+    void this.orders.loadQuotes();
+  }
 
   readonly pageSize = PAGE_SIZE;
 

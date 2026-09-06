@@ -21,6 +21,11 @@ export class MaterialStepComponent {
   readonly materials = computed(() => this.catalog.activeMaterials());
   readonly machine = computed(() => this.config.machine());
 
+  constructor() {
+    void this.config.load();
+    void this.catalog.loadMaterials();
+  }
+
   readonly quantityError = computed(() => {
     const { qtyMin, qtyMax } = this.machine();
     const qty = this.draft.quantity();

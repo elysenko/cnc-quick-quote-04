@@ -1,33 +1,49 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { ApiService } from './api.service';
 import { BusinessConfig } from './models';
 
 /**
- * Branding is fetched once from `GET /api/branding` and applied as CSS custom
- * properties on :root. The defaults below are the fallback when branding is unset.
+ * Branding is fetched from `GET /api/branding` (public, so /login themes itself too)
+ * and applied as CSS custom properties on :root.
  */
 @Injectable({ providedIn: 'root' })
 export class BrandingService {
-  readonly branding = signal<BusinessConfig[]>([
-    {
-      companyName: 'Halcyon Metalworks',
-      logoUrl: '',
-      primaryColor: '#2563eb',
-      accentColor: '#f97316',
-      contactEmail: 'quotes@halcyonmetalworks.com',
-      contactPhone: '+1 (503) 555-0148',
-      supportHours: 'Mon–Fri, 7:00–17:00 PT',
-      addressLine1: '1420 Foundry Road',
-      addressLine2: 'Building C',
-      city: 'Portland',
-      region: 'OR',
-      postalCode: '97210',
-      country: 'United States',
-    },
-  ]);
+  private readonly api = inject(ApiService);
+
+  readonly branding = signal<BusinessConfig[]>([]);
+  readonly loaded = signal(false);
+
+  private loading: Promise<void> | null = null;
+
+  load(force = false): Promise<void> {
+    if (this.loading && !force) return this.loading;
+    if (this.loaded() && !force) return Promise.resolve();
+    this.loading = this.api
+      .get<BusinessConfig>('/branding')
+      .then((business) => {
+        this.branding.set([business]);
+        this.loaded.set(true);
+        this.apply();
+      })
+      .catch(() => {
+        // Branding is decoration: a failure must never block the shell from rendering.
+      })
+      .finally(() => {
+        this.loading = null;
+      });
+    return this.loading;
+  }
 
   /** The single active branding record, or null before it loads. */
   current(): BusinessConfig | null {
     return this.branding().at(0) ?? null;
+  }
+
+  async save(next: BusinessConfig): Promise<void> {
+    const saved = await this.api.put<BusinessConfig>('/admin/config/business', next);
+    this.branding.set([saved]);
+    this.loaded.set(true);
+    this.apply();
   }
 
   apply(): void {

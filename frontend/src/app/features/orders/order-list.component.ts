@@ -27,10 +27,14 @@ export class OrderListComponent {
   private readonly router = inject(Router);
   private readonly orders = inject(OrdersService);
 
-  /** Set while `orders.list` is in flight. */
-  readonly loading = signal(false);
-  /** Holds the message from a failed `orders.list` call. */
-  readonly loadError = signal<string | null>(null);
+  /** Set while `GET /api/orders` is in flight. */
+  readonly loading = this.orders.ordersLoading;
+  /** Holds the message from a failed `GET /api/orders` call. */
+  readonly loadError = this.orders.ordersError;
+
+  constructor() {
+    void this.orders.loadOrders();
+  }
 
   readonly statusOptions: StatusOption[] = [
     { value: 'all', label: 'All' },
