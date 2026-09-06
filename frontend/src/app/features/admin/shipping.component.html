@@ -1,0 +1,212 @@
+<section class="stack" data-testid="admin-shipping-page">
+  @if (saved(); as message) {
+    <div class="alert alert-ok" role="status" data-testid="shipping-saved">
+      <span aria-hidden="true">✓</span>
+      <span><strong>Saved</strong>{{ message }}</span>
+    </div>
+  }
+
+  @if (activeCount() === 0 && methods().length > 0) {
+    <div class="alert alert-warn" role="alert" data-testid="shipping-none-active">
+      <span aria-hidden="true">!</span>
+      <span>
+        <strong>No method is active</strong>
+        Checkout is blocked until at least one method is active — customers are told to contact you instead.
+      </span>
+    </div>
+  }
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>Shipping methods</h2>
+        <p class="hint">Flat methods bill once; per-sheet methods bill their amount for every sheet in the nest.</p>
+      </div>
+      <button type="button" class="btn btn-primary" data-testid="shipping-add" (click)="openNew()">
+        Add shipping method
+      </button>
+    </div>
+
+    @if (methods().length === 0) {
+      <div class="card-pad">
+        <app-state-panel
+          state="empty"
+          testid="shipping-methods"
+          heading="No shipping methods yet"
+          message="Customers cannot check out until one method exists and is active. Add a flat rate to get started.">
+          <button panelAction type="button" class="btn btn-primary btn-sm" (click)="openNew()">
+            Add shipping method
+          </button>
+        </app-state-panel>
+      </div>
+    } @else {
+      <div data-testid="shipping-methods-table">
+        <div class="table-wrap desktop-only">
+          <table class="data">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Rate type</th>
+                <th scope="col">Amount</th>
+                <th scope="col">Estimated delivery</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (method of methods(); track method.id) {
+                <tr [attr.data-testid]="'shipping-row-' + method.id">
+                  <td><strong>{{ method.name }}</strong></td>
+                  <td>{{ rateLabel(method.rateType) }}</td>
+                  <td class="num">
+                    {{ method.amountCents | money }}
+                    @if (method.rateType === 'PER_SHEET') { <span class="per">/ sheet</span> }
+                  </td>
+                  <td class="num">{{ method.estDeliveryDays }} days</td>
+                  <td>
+                    @if (method.isActive) {
+                      <span class="badge badge-ok">Active</span>
+                    } @else {
+                      <span class="badge badge-muted">Inactive</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="row-actions">
+                      <button type="button" class="btn btn-ghost btn-sm"
+                              [attr.data-testid]="'shipping-edit-' + method.id"
+                              (click)="openEdit(method)">Edit</button>
+                      <button type="button" class="btn btn-quiet btn-sm"
+                              [attr.data-testid]="'shipping-delete-' + method.id"
+                              (click)="openDelete(method)">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <ul class="cards mobile-only">
+          @for (method of methods(); track method.id) {
+            <li class="m-card" [attr.data-testid]="'shipping-card-' + method.id">
+              <div class="m-head">
+                <strong>{{ method.name }}</strong>
+                @if (method.isActive) {
+                  <span class="badge badge-ok">Active</span>
+                } @else {
+                  <span class="badge badge-muted">Inactive</span>
+                }
+              </div>
+              <dl class="dl">
+                <dt>Rate type</dt><dd>{{ rateLabel(method.rateType) }}</dd>
+                <dt>Amount</dt>
+                <dd class="num">
+                  {{ method.amountCents | money }}
+                  @if (method.rateType === 'PER_SHEET') { <span class="per">/ sheet</span> }
+                </dd>
+                <dt>Delivery</dt><dd class="num">{{ method.estDeliveryDays }} days</dd>
+              </dl>
+              <div class="row-actions">
+                <button type="button" class="btn btn-ghost btn-sm" (click)="openEdit(method)">Edit</button>
+                <button type="button" class="btn btn-quiet btn-sm" (click)="openDelete(method)">Delete</button>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <p class="note">
+        When no method is active, customers cannot check out — the shipping step blocks with a message asking
+        them to contact the company, rather than quietly shipping for free.
+      </p>
+    }
+  </div>
+</section>
+
+@if (modal() === 'new' || (modal() === 'edit' && target())) {
+  <app-modal
+    [heading]="modal() === 'edit' ? 'Edit shipping method' : 'Add shipping method'"
+    subheading="Per-sheet rates are multiplied by the sheet count of the quote being checked out."
+    testid="shipping-method-modal"
+    (dismissed)="close()">
+
+    <div class="field">
+      <label for="ship-name">Name</label>
+      <input id="ship-name" type="text" placeholder="Standard freight" data-testid="shipping-name"
+             [class.invalid]="nameError() !== null"
+             [ngModel]="name()" (ngModelChange)="name.set($event)" />
+      @if (nameError(); as message) {
+        <span class="error-text" data-testid="shipping-name-error">{{ message }}</span>
+      } @else {
+        <span class="hint">Shown to the customer at checkout.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="ship-rate">Rate type</label>
+      <select id="ship-rate" data-testid="shipping-rate-type"
+              [ngModel]="rateType()" (ngModelChange)="rateType.set($event)">
+        <option value="FLAT">Flat</option>
+        <option value="PER_SHEET">Per sheet</option>
+      </select>
+      <span class="hint">Flat bills once per order; per sheet bills the amount for every nested sheet.</span>
+    </div>
+
+    <div class="field">
+      <label for="ship-amount">Amount</label>
+      <div class="money">
+        <span class="cur" aria-hidden="true">$</span>
+        <input id="ship-amount" type="number" min="0" step="0.01" inputmode="decimal"
+               data-testid="shipping-amount"
+               [ngModel]="amount()" (ngModelChange)="amount.set(num($event))" />
+      </div>
+      <span class="hint">
+        Dollars, stored to the cent.
+        @if (rateType() === 'PER_SHEET') { A three-sheet nest would bill {{ amount().toFixed(2) }} × 3. }
+      </span>
+    </div>
+
+    <div class="field">
+      <label for="ship-days">Estimated delivery days</label>
+      <input id="ship-days" type="number" min="1" step="1" inputmode="numeric"
+             data-testid="shipping-est-days"
+             [ngModel]="estDeliveryDays()" (ngModelChange)="estDeliveryDays.set(num($event))" />
+      <span class="hint">Working days after despatch, quoted at checkout.</span>
+    </div>
+
+    <label class="switch" data-testid="shipping-active-toggle">
+      <input type="checkbox" [ngModel]="isActive()" (ngModelChange)="isActive.set($event)" />
+      <span>Active — offer this method at checkout</span>
+    </label>
+
+    <button modalActions type="button" class="btn btn-ghost" data-testid="shipping-reset" (click)="reset()">
+      Reset
+    </button>
+    <button modalActions type="button" class="btn btn-primary" data-testid="shipping-save"
+            [disabled]="nameError() !== null" (click)="save()">
+      Save changes
+    </button>
+  </app-modal>
+}
+
+@if (modal() === 'delete') {
+  @if (target(); as method) {
+    <app-modal
+      heading="Delete shipping method"
+      [subheading]="method.name"
+      testid="shipping-delete-modal"
+      (dismissed)="close()">
+      <p>
+        Deleting removes {{ method.name }} ({{ method.amountCents | money }},
+        {{ rateLabel(method.rateType) }} rate) from checkout immediately. Orders already placed keep the
+        method name and cost recorded against them.
+      </p>
+      <p class="hint">Deactivate it instead if you only want to pause it for a while.</p>
+
+      <button modalActions type="button" class="btn btn-ghost" data-testid="shipping-delete-cancel"
+              (click)="close()">Cancel</button>
+      <button modalActions type="button" class="btn btn-danger" data-testid="shipping-delete-confirm"
+              (click)="remove()">Delete method</button>
+    </app-modal>
+  }
+}

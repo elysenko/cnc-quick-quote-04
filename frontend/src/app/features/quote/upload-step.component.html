@@ -1,0 +1,63 @@
+<section class="grid cols" data-testid="upload-step">
+  <div class="card card-pad">
+    <h2>Upload your drawing</h2>
+    <p class="lede">We read the cut length, bounding box and entity count straight from the file.</p>
+
+    @if (draft.uploadError(); as reason) {
+      <div class="alert alert-error" role="alert" data-testid="upload-error">
+        <span aria-hidden="true">!</span>
+        <span><strong>We could not read that file</strong>{{ reason }}</span>
+      </div>
+    }
+
+    @if (draft.uploadState() === 'parsing') {
+      <div class="progress-box" data-testid="upload-progress">
+        <p class="mono">Parsing entities…</p>
+        <div class="bar"><span [style.width.%]="draft.uploadProgress()"></span></div>
+        <p class="hint">{{ draft.uploadProgress() }}%</p>
+      </div>
+    } @else {
+      <label class="dropzone" [class.hot]="dragging()" data-testid="upload-dropzone"
+             (dragover)="onDragOver($event)" (dragleave)="onDragLeave()" (drop)="onDrop($event)">
+        <span class="dz-glyph" aria-hidden="true">⇪</span>
+        <strong>Drag a drawing here</strong>
+        <span class="hint">or tap to browse your files</span>
+        <input type="file" [accept]="acceptList()" data-testid="upload-input" (change)="onPick($event)" />
+      </label>
+      <ul class="limits">
+        <li><span>Accepted</span><b>{{ acceptList() }}</b></li>
+        <li><span>Max size</span><b>{{ maxUploadMb() }} MB</b></li>
+        <li><span>Entities read</span><b>LINE, ARC, CIRCLE, LWPOLYLINE, POLYLINE</b></li>
+      </ul>
+    }
+  </div>
+
+  <div class="card card-pad">
+    <h2>Parsed drawing</h2>
+    @if (draft.drawing(); as drawing) {
+      <p class="lede">Check the numbers below match your part before pricing it.</p>
+      <dl class="dl" data-testid="upload-summary">
+        <dt>File</dt><dd class="mono">{{ drawing.filename }}</dd>
+        <dt>Size</dt><dd class="num">{{ (drawing.sizeBytes / 1024).toFixed(1) }} KB</dd>
+        <dt>Entities</dt>
+        <dd class="num" data-testid="upload-entity-count">{{ drawing.entityCount }} parsed</dd>
+        <dt>Part size</dt>
+        <dd class="num">{{ draft.partWidthMm() }} × {{ draft.partHeightMm() }} mm</dd>
+        <dt>Cut length</dt>
+        <dd class="num">{{ drawing.cutLengthMm.toFixed(1) }} mm per part</dd>
+      </dl>
+      <div class="alert alert-info">
+        <span aria-hidden="true">i</span>
+        <span>A low entity count usually means the drawing uses splines or blocks we do not cut from.</span>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-testid="upload-clear" (click)="clear()">
+        Remove drawing
+      </button>
+    } @else {
+      <div class="placeholder" data-testid="upload-empty">
+        <span class="dz-glyph muted" aria-hidden="true">▦</span>
+        <p>Nothing parsed yet. Upload a drawing and its measurements appear here.</p>
+      </div>
+    }
+  </div>
+</section>

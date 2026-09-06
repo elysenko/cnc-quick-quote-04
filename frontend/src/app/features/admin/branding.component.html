@@ -1,0 +1,172 @@
+<section class="stack" data-testid="admin-branding-page">
+  @if (saved()) {
+    <div class="alert alert-ok" role="status" data-testid="branding-saved">
+      <span aria-hidden="true">✓</span>
+      <span><strong>Saved</strong>The palette has been applied across the app and to new confirmation emails.</span>
+    </div>
+  }
+
+  <form class="stack" (ngSubmit)="save()" novalidate>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Identity</h2>
+          <p class="hint">Shown in the shell header, on receipts and in customer email.</p>
+        </div>
+      </div>
+
+      <div class="card-pad">
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="brand-name">Company name</label>
+            <input id="brand-name" name="companyName" type="text" data-testid="branding-company-name"
+                   [ngModel]="companyName()" (ngModelChange)="companyName.set($event)" />
+          </div>
+
+          <div class="field">
+            <label for="brand-logo">Logo URL</label>
+            <input id="brand-logo" name="logoUrl" type="url" placeholder="https://…/logo.svg"
+                   data-testid="branding-logo-url"
+                   [ngModel]="logoUrl()" (ngModelChange)="logoUrl.set($event)" />
+            <span class="hint">Leave blank to fall back to the wordmark.</span>
+          </div>
+
+          <div class="field">
+            <label for="brand-primary">Primary colour</label>
+            <div class="colour-row">
+              <input id="brand-primary" name="primaryColor" type="color" class="swatch"
+                     data-testid="branding-primary-color"
+                     [ngModel]="primaryColor()" (ngModelChange)="primaryColor.set($event)" />
+              <input name="primaryHex" type="text" class="mono" autocapitalize="off" spellcheck="false"
+                     aria-label="Primary colour hex" data-testid="branding-primary-hex"
+                     [class.invalid]="primaryError() !== null"
+                     [ngModel]="primaryColor()" (ngModelChange)="primaryColor.set($event)" />
+            </div>
+            @if (primaryError(); as message) {
+              <span class="error-text" data-testid="branding-primary-error">{{ message }}</span>
+            } @else {
+              <span class="hint">Buttons, links and active states.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label for="brand-accent">Accent colour</label>
+            <div class="colour-row">
+              <input id="brand-accent" name="accentColor" type="color" class="swatch"
+                     data-testid="branding-accent-color"
+                     [ngModel]="accentColor()" (ngModelChange)="accentColor.set($event)" />
+              <input name="accentHex" type="text" class="mono" autocapitalize="off" spellcheck="false"
+                     aria-label="Accent colour hex" data-testid="branding-accent-hex"
+                     [class.invalid]="accentError() !== null"
+                     [ngModel]="accentColor()" (ngModelChange)="accentColor.set($event)" />
+            </div>
+            @if (accentError(); as message) {
+              <span class="error-text" data-testid="branding-accent-error">{{ message }}</span>
+            } @else {
+              <span class="hint">Bend lines on the work bed and secondary calls to action.</span>
+            }
+          </div>
+        </div>
+
+        <div class="preview" data-testid="branding-preview" [style.background]="primaryColor()">
+          <span class="preview-mark" [style.color]="accentColor()" aria-hidden="true">◈</span>
+          <strong class="preview-name">{{ companyName() || 'Your company' }}</strong>
+          <span class="preview-sub">Laser-cut parts, priced in seconds.</span>
+          <span class="preview-btn" [style.background]="accentColor()">Get a quote</span>
+        </div>
+        <p class="hint preview-note">Live preview — company name on the primary colour, with the accent button.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Contact</h2>
+          <p class="hint">Printed on receipts and quoted to customers when checkout is blocked.</p>
+        </div>
+      </div>
+
+      <div class="card-pad">
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="brand-email">Contact email</label>
+            <input id="brand-email" name="contactEmail" type="email" autocomplete="email"
+                   data-testid="branding-contact-email"
+                   [ngModel]="contactEmail()" (ngModelChange)="contactEmail.set($event)" />
+          </div>
+
+          <div class="field">
+            <label for="brand-phone">Contact phone</label>
+            <input id="brand-phone" name="contactPhone" type="tel" data-testid="branding-contact-phone"
+                   [ngModel]="contactPhone()" (ngModelChange)="contactPhone.set($event)" />
+          </div>
+
+          <div class="field">
+            <label for="brand-hours">Support hours</label>
+            <input id="brand-hours" name="supportHours" type="text" placeholder="Mon–Fri, 7:00–17:00 PT"
+                   data-testid="branding-support-hours"
+                   [ngModel]="supportHours()" (ngModelChange)="supportHours.set($event)" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Workshop address</h2>
+          <p class="hint">The collection address and the return address on shipping paperwork.</p>
+        </div>
+      </div>
+
+      <div class="card-pad">
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="brand-line1">Address line 1</label>
+            <input id="brand-line1" name="addressLine1" type="text" data-testid="branding-address-line1"
+                   [ngModel]="addressLine1()" (ngModelChange)="addressLine1.set($event)" />
+          </div>
+
+          <div class="field">
+            <label for="brand-line2">Address line 2</label>
+            <input id="brand-line2" name="addressLine2" type="text" data-testid="branding-address-line2"
+                   [ngModel]="addressLine2()" (ngModelChange)="addressLine2.set($event)" />
+          </div>
+
+          <div class="field">
+            <label for="brand-city">City</label>
+            <input id="brand-city" name="city" type="text" data-testid="branding-city"
+                   [ngModel]="city()" (ngModelChange)="city.set($event)" />
+          </div>
+
+          <div class="field">
+            <label for="brand-region">Region</label>
+            <input id="brand-region" name="region" type="text" data-testid="branding-region"
+                   [ngModel]="region()" (ngModelChange)="region.set($event)" />
+          </div>
+
+          <div class="field">
+            <label for="brand-postal">Postal code</label>
+            <input id="brand-postal" name="postalCode" type="text" data-testid="branding-postal-code"
+                   [ngModel]="postalCode()" (ngModelChange)="postalCode.set($event)" />
+          </div>
+
+          <div class="field">
+            <label for="brand-country">Country</label>
+            <input id="brand-country" name="country" type="text" data-testid="branding-country"
+                   [ngModel]="country()" (ngModelChange)="country.set($event)" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary" data-testid="branding-save" [disabled]="invalid()">
+        Save changes
+      </button>
+      <button type="button" class="btn btn-ghost" data-testid="branding-reset" (click)="reset()">Reset</button>
+      <span class="spacer"></span>
+      <span class="hint">Colours apply immediately after saving.</span>
+    </div>
+  </form>
+</section>

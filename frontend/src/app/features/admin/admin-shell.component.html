@@ -1,0 +1,39 @@
+<div class="page" data-testid="admin-shell">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Admin console</h1>
+      <p>Everything the quoting engine reads: stock materials, rates, machine limits, branding and credentials.</p>
+    </div>
+  </header>
+
+  @if (unconfigured().length > 0) {
+    <div class="alert alert-warn" role="alert" data-testid="admin-unconfigured-banner">
+      <span aria-hidden="true">!</span>
+      <span>
+        <span>The following need credentials to activate: {{ unconfiguredLabels() }}</span>
+        <a class="banner-link" routerLink="/admin/settings" data-testid="admin-banner-link">Open settings</a>
+      </span>
+    </div>
+  }
+
+  <nav class="tabs" aria-label="Admin sections" data-testid="admin-tabs">
+    @for (tab of tabs; track tab.key) {
+      <a class="tab" [routerLink]="tab.route" [class.active]="isActive(tab)"
+         [attr.data-testid]="'admin-tab-' + tab.key"
+         [attr.aria-current]="isActive(tab) ? 'page' : null">{{ tab.label }}</a>
+    }
+  </nav>
+
+  @if (inBusiness()) {
+    <nav class="subtabs" aria-label="Business settings" data-testid="admin-business-tabs">
+      @for (tab of businessTabs; track tab.key) {
+        <a class="subtab" [routerLink]="tab.route" [class.active]="isActive(tab)"
+           [attr.data-testid]="'admin-business-tab-' + tab.key"
+           [attr.aria-current]="isActive(tab) ? 'page' : null">{{ tab.label }}</a>
+      }
+    </nav>
+  }
+
+  <div class="section"><router-outlet /></div>
+</div>

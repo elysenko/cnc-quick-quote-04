@@ -1,0 +1,132 @@
+<div class="page" data-testid="checkout-payment-page">
+  @if (quote(); as quote) {
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Checkout</p>
+        <h1>Payment</h1>
+        <p>The last step. Your card details are entered on Stripe's page, never on ours.</p>
+      </div>
+      <span class="badge badge-muted mono">{{ quote.id }}</span>
+    </header>
+
+    <ol class="steps" data-testid="checkout-steps">
+      <li class="step done">
+        <a class="step-body" routerLink="/checkout/{{ quote.id }}/review">
+          <span class="dot" aria-hidden="true">✓</span><span class="step-label">Review</span>
+        </a>
+      </li>
+      <li class="step done">
+        <a class="step-body" routerLink="/checkout/{{ quote.id }}/shipping">
+          <span class="dot" aria-hidden="true">✓</span><span class="step-label">Shipping</span>
+        </a>
+      </li>
+      <li class="step active">
+        <span class="step-body" aria-current="step">
+          <span class="dot" aria-hidden="true">3</span><span class="step-label">Payment</span>
+        </span>
+      </li>
+    </ol>
+
+    <section class="layout">
+      <div class="card card-pad pay-card">
+        @if (cancelled()) {
+          <div class="alert alert-warn" role="alert" data-testid="payment-cancelled">
+            <span class="glyph" aria-hidden="true">!</span>
+            <div>
+              <strong>Payment cancelled</strong>
+              <p>You came back from Stripe without paying. No charge was made and quote
+                <span class="mono">{{ quote.id }}</span> is untouched — start again whenever you are ready.</p>
+              <button type="button" class="btn btn-ghost btn-sm" data-testid="payment-cancelled-retry"
+                      (click)="retry()">Try payment again</button>
+            </div>
+          </div>
+        }
+
+        @if (failed()) {
+          <div class="alert alert-error" role="alert" data-testid="payment-error">
+            <span class="glyph" aria-hidden="true">!</span>
+            <div>
+              <strong>Payment provider unreachable</strong>
+              <p>We could not reach the payment provider. No order was created — please try again.</p>
+              <button type="button" class="btn btn-ghost btn-sm" data-testid="payment-error-retry"
+                      (click)="retry()">Retry</button>
+            </div>
+          </div>
+        }
+
+        @if (redirecting()) {
+          <div class="redirect" role="status" data-testid="payment-redirecting">
+            <div class="spinner" aria-hidden="true"></div>
+            <h2>Taking you to Stripe…</h2>
+            <p class="hint">Keep this tab open. You will come straight back once the card is authorised.</p>
+          </div>
+        } @else {
+          <h2>Pay by card</h2>
+          <p>
+            Selecting <strong>Pay by card</strong> hands you over to Stripe's hosted checkout page.
+            Card numbers are entered there and never touch our servers — we only receive the result.
+          </p>
+          <ul class="assurances">
+            <li><span aria-hidden="true">◈</span> Your quote is locked at {{ quote.totalCents | money }} for the parts.</li>
+            <li><span aria-hidden="true">◈</span> The order is only created once Stripe confirms the payment.</li>
+            <li><span aria-hidden="true">◈</span> Cancelling on Stripe's page brings you back here with nothing charged.</li>
+          </ul>
+
+          @if (sandbox()) {
+            <div class="alert alert-info" data-testid="payment-sandbox">
+              <span class="glyph" aria-hidden="true">i</span>
+              <div>
+                <strong>Sandbox mode</strong>
+                <p>Payments run against Stripe test keys. Use card 4242 4242 4242 4242 with any future expiry —
+                  no money moves.</p>
+              </div>
+            </div>
+          }
+
+          <button type="button" class="btn btn-primary btn-block pay-btn" data-testid="payment-pay"
+                  (click)="pay()">Pay by card — {{ amountDueCents() | money }}</button>
+
+          <div class="preview-row">
+            <a class="btn btn-ghost btn-sm" data-testid="payment-back"
+               routerLink="/checkout/{{ quote.id }}/shipping">Back to shipping</a>
+            <button type="button" class="btn btn-quiet btn-sm" data-testid="payment-simulate-error"
+                    (click)="simulateError()">Preview: payment provider unreachable</button>
+          </div>
+        }
+      </div>
+
+      <aside class="card sum-card">
+        <div class="card-head"><h2>Amount due</h2></div>
+        <ul class="lines">
+          <li>
+            <span class="l-label">
+              <strong>Parts and processing</strong>
+              <small>{{ quote.quantity }} × {{ quote.drawingName }}</small>
+            </span>
+            <span class="num l-amount">{{ quote.totalCents | money }}</span>
+          </li>
+          <li>
+            <span class="l-label">
+              <strong>Shipping</strong>
+              <small>{{ shipping() ? shipping()!.name : 'Arranged separately' }}</small>
+            </span>
+            <span class="num l-amount">{{ shippingCents() | money }}</span>
+          </li>
+        </ul>
+        <div class="total">
+          <span>Amount due</span>
+          <strong class="num" data-testid="payment-amount">{{ amountDueCents() | money }}</strong>
+        </div>
+        <p class="fine">Charged in USD. A receipt reaches you by email as soon as Stripe confirms.</p>
+      </aside>
+    </section>
+  } @else {
+    <app-state-panel
+      state="error"
+      testid="checkout-payment"
+      heading="We could not open that quote"
+      message="Quote {{ quoteId() }} does not exist, or it is no longer available on this account. Nothing has been charged.">
+      <a panelAction class="btn btn-primary" routerLink="/quotes">Back to your quotes</a>
+    </app-state-panel>
+  }
+</div>

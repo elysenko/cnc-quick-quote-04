@@ -1,0 +1,8 @@
+:host { display: flex; flex-direction: column; gap: var(--space-3); }
+.stage-wrap { position: relative; width: 100%; height: clamp(300px, 52vh, 520px); background: var(--color-bed); border-radius: var(--radius-sm); overflow: hidden; }
+canvas { display: block; }
+.bed-bar { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.legend { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--color-text-muted); }
+.swatch { display: inline-block; width: 18px; height: 0; border-top-width: 3px; border-top-style: solid; }
+.swatch.cut { border-color: var(--color-cut); }
+.swatch.bend { border-color: var(--color-bend); border-top-style: dashed; }

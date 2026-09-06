@@ -1,0 +1,13 @@
+<div class="scrim" (click)="dismissed.emit()"></div>
+<div class="sheet" role="dialog" aria-modal="true" [attr.data-testid]="testid">
+  <header>
+    <div>
+      <h2>{{ heading }}</h2>
+      @if (subheading) { <p class="sub">{{ subheading }}</p> }
+    </div>
+    <button type="button" class="btn btn-quiet btn-sm" (click)="dismissed.emit()"
+            [attr.data-testid]="testid + '-close'" aria-label="Close dialog">Close</button>
+  </header>
+  <div class="body"><ng-content /></div>
+  <footer><ng-content select="[modalActions]" /></footer>
+</div>

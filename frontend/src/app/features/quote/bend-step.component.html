@@ -1,0 +1,75 @@
+<section class="layout" data-testid="bend-step">
+  <div class="card editor-card">
+    <div class="card-head">
+      <div>
+        <h2>Place bend lines</h2>
+        <p class="hint">Drag across the part to add a bend. Tap a bend to select, then drag to move it.</p>
+      </div>
+      <span class="badge badge-muted">{{ draft.bends().length }} bend(s)</span>
+    </div>
+    <div class="canvas-slot">
+      @if (draft.drawing(); as drawing) {
+        <app-bend-editor
+          [paths]="drawing.paths" [bbox]="drawing.bbox"
+          [bends]="draft.bends()" [selectedId]="draft.selectedBendId()"
+          (bendDrawn)="onDrawn($event)" (bendMoved)="onMoved($event)"
+          (bendPicked)="draft.selectedBendId.set($event)" />
+      }
+    </div>
+    <ul class="legend">
+      <li><i class="swatch cut" aria-hidden="true"></i>Cut path</li>
+      <li><i class="swatch bend" aria-hidden="true"></i>Bend line</li>
+      <li class="hint">Bends are stored separately — your drawing file is never modified.</li>
+    </ul>
+  </div>
+
+  <aside class="stack">
+    <div class="card card-pad">
+      <h3>Selected bend</h3>
+      @if (selected(); as bend) {
+        <div class="field">
+          <label for="bend-angle">Bend angle (0–180°)</label>
+          <input id="bend-angle" type="number" min="0" max="180" data-testid="bend-angle"
+                 [value]="bend.angleDeg" (input)="setAngle($any($event.target).value)" />
+        </div>
+        <div class="field">
+          <label id="dir-label">Direction</label>
+          <div class="seg" role="group" aria-labelledby="dir-label">
+            <button type="button" [class.on]="bend.direction === 'UP'" data-testid="bend-dir-up"
+                    (click)="setDirection('UP')">Up</button>
+            <button type="button" [class.on]="bend.direction === 'DOWN'" data-testid="bend-dir-down"
+                    (click)="setDirection('DOWN')">Down</button>
+          </div>
+        </div>
+        <div class="row">
+          <button type="button" class="btn btn-ghost btn-sm" data-testid="bend-rotate" (click)="rotate(15)">Rotate 15°</button>
+          <button type="button" class="btn btn-danger btn-sm" data-testid="bend-delete" (click)="remove(bend.id)">Delete</button>
+        </div>
+      } @else {
+        <p class="hint">Nothing selected. Drag on the part to draw a bend, or tap an existing one.</p>
+      }
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Bend list</h3></div>
+      @if (draft.bends().length === 0) {
+        <p class="empty" data-testid="bends-empty">No bends yet. Flat parts are quoted without bending charges.</p>
+      } @else {
+        <ul class="bend-list" data-testid="bends-list">
+          @for (bend of draft.bends(); track bend.id; let i = $index) {
+            <li [class.on]="bend.id === draft.selectedBendId()">
+              <button type="button" class="pick" (click)="draft.selectedBendId.set(bend.id)"
+                      [attr.data-testid]="'bend-item-' + bend.id">
+                <strong>Bend {{ i + 1 }}</strong>
+                <span class="num">{{ bend.angleDeg }}° {{ bend.direction === 'UP' ? 'up' : 'down' }}</span>
+                <span class="mono coords">({{ bend.startX }}, {{ bend.startY }}) → ({{ bend.endX }}, {{ bend.endY }})</span>
+              </button>
+              <button type="button" class="btn btn-quiet btn-sm" aria-label="Delete bend"
+                      (click)="remove(bend.id)">✕</button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </aside>
+</section>

@@ -1,0 +1,76 @@
+<section class="stack" data-testid="admin-settings-page">
+  <div class="alert alert-warn" role="alert" data-testid="settings-banner">
+    <span aria-hidden="true">!</span>
+    <span>The following need credentials to activate: Stripe Python SDK (StripeClient, v15.6), Resend API (resend SDK), MinIO / S3-compatible object storage (minio SDK), PostgreSQL, Redis.</span>
+  </div>
+
+  <p class="count" data-testid="settings-unconfigured-count">
+    {{ unconfiguredCount() }} of {{ total() }} entries still need credentials.
+  </p>
+
+  <div class="stack" data-testid="settings-list">
+    @for (section of sections(); track section.kind) {
+      <div class="card" [attr.data-testid]="'settings-section-' + section.kind">
+        <div class="card-head">
+          <div>
+            <h2>{{ section.title }}</h2>
+            <p class="hint">{{ section.hint }}</p>
+          </div>
+          <span class="badge badge-muted">{{ section.entries.length }} entries</span>
+        </div>
+
+        <ul class="rows">
+          @for (setting of section.entries; track setting.key) {
+            <li class="row-item" [attr.data-testid]="'setting-row-' + setting.key">
+              <div class="meta">
+                <div class="title">
+                  <strong>{{ setting.label }}</strong>
+                  @if (setting.configured) {
+                    <span class="badge badge-ok">Configured</span>
+                  } @else {
+                    <span class="badge badge-warn">Needs credentials</span>
+                  }
+                </div>
+                <p class="sdk">{{ setting.sdk }}</p>
+                <p class="mono key">{{ setting.key }}</p>
+                @if (setting.configured) {
+                  <p class="mono masked" [attr.data-testid]="'setting-masked-' + setting.key">{{ setting.maskedValue }}</p>
+                } @else {
+                  <p class="sdk">No credential stored — dependent calls return 503.</p>
+                }
+              </div>
+
+              <div class="entry">
+                <div class="field">
+                  <label [attr.for]="'cred-' + setting.key" class="sr-only">Credential for {{ setting.label }}</label>
+                  <input [attr.id]="'cred-' + setting.key" type="password" autocomplete="off"
+                         placeholder="Paste credential"
+                         [attr.data-testid]="'setting-input-' + setting.key"
+                         [value]="entry(setting.key)"
+                         (input)="setEntry(setting.key, $any($event.target).value)" />
+                </div>
+                <div class="entry-acts">
+                  <button type="button" class="btn btn-primary btn-sm"
+                          [attr.data-testid]="'setting-save-' + setting.key"
+                          [disabled]="entry(setting.key).trim().length === 0"
+                          (click)="save(setting.key)">Save</button>
+                  @if (setting.configured) {
+                    <button type="button" class="btn btn-ghost btn-sm"
+                            [attr.data-testid]="'setting-clear-' + setting.key"
+                            (click)="clear(setting.key)">Clear</button>
+                  }
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </div>
+
+  <p class="note">
+    In production an environment variable always wins over a value stored here — set the env var and this
+    screen reports the entry as configured without holding a copy. Values are write-only: once saved they
+    are never returned in full, only the last four characters (for example ••••••••3f2a).
+  </p>
+</section>

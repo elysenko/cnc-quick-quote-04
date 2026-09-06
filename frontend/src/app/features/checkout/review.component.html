@@ -1,0 +1,103 @@
+<div class="page" data-testid="checkout-review-page">
+  @if (quote(); as quote) {
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Checkout</p>
+        <h1>Review your quote</h1>
+        <p>Check the part, material and price before choosing a delivery method. Nothing is charged at this step.</p>
+      </div>
+      <span class="badge badge-muted mono" data-testid="review-quote-id">{{ quote.id }}</span>
+    </header>
+
+    <ol class="steps" data-testid="checkout-steps">
+      <li class="step active">
+        <span class="step-body" aria-current="step">
+          <span class="dot" aria-hidden="true">1</span><span class="step-label">Review</span>
+        </span>
+      </li>
+      <li class="step">
+        <span class="step-body">
+          <span class="dot" aria-hidden="true">2</span><span class="step-label">Shipping</span>
+        </span>
+      </li>
+      <li class="step">
+        <span class="step-body">
+          <span class="dot" aria-hidden="true">3</span><span class="step-label">Payment</span>
+        </span>
+      </li>
+    </ol>
+
+    <section class="layout">
+      <div class="stack">
+        <div class="card">
+          <div class="card-head">
+            <h2>What you are ordering</h2>
+            <span class="badge badge-info">Price locked</span>
+          </div>
+          <div class="card-pad">
+            <dl class="dl" data-testid="review-part">
+              <dt>Drawing</dt>
+              <dd class="mono" data-testid="review-drawing">{{ quote.drawingName }}</dd>
+              <dt>Material</dt>
+              <dd data-testid="review-material">{{ quote.materialName }}</dd>
+              <dt>Quantity</dt>
+              <dd class="num" data-testid="review-quantity">{{ quote.quantity }} parts</dd>
+              <dt>Cut length</dt>
+              <dd class="num" data-testid="review-cut-length">
+                {{ quote.cutLengthMm.toFixed(1) }} mm per part · {{ perPartFt() }} ft each · {{ totalFt() }} ft total
+              </dd>
+              <dt>Bends</dt>
+              <dd class="num" data-testid="review-bends">
+                {{ quote.bendCount }} per part · {{ quote.bendCount * quote.quantity }} bend hits
+              </dd>
+              <dt>Sheets</dt>
+              <dd class="num" data-testid="review-sheets">
+                {{ quote.nesting.sheets }} × {{ quote.materialName }} at {{ (quote.nesting.utilization * 100).toFixed(1) }}% utilisation
+              </dd>
+              <dt>Nest</dt>
+              <dd class="num">
+                {{ quote.nesting.perSheet }} parts per sheet ({{ quote.nesting.cols }} × {{ quote.nesting.rows }})
+              </dd>
+            </dl>
+          </div>
+        </div>
+
+        <p class="fine">
+          Quoted on {{ quote.createdAt | date: 'd MMM y, HH:mm' }}. The price holds while you complete checkout —
+          re-quoting after a material or rate change will produce a different number.
+        </p>
+      </div>
+
+      <aside class="card price-card">
+        <div class="card-head"><h2>Itemised price</h2></div>
+        <ul class="lines" data-testid="review-breakdown">
+          @for (line of quote.breakdown; track line.label) {
+            <li>
+              <span class="l-label"><strong>{{ line.label }}</strong><small>{{ line.detail }}</small></span>
+              <span class="num l-amount">{{ line.amountCents | money }}</span>
+            </li>
+          }
+        </ul>
+        <div class="total">
+          <span>Quote total</span>
+          <strong class="num" data-testid="review-total">{{ quote.totalCents | money }}</strong>
+        </div>
+        <p class="fine">Shipping is added at the next step. Tax, where it applies, is shown before payment.</p>
+        <div class="cta">
+          <a class="btn btn-primary btn-block" data-testid="review-continue"
+             routerLink="/checkout/{{ quote.id }}/shipping">Continue to shipping</a>
+          <a class="btn btn-ghost btn-block" data-testid="review-back"
+             routerLink="/quotes/{{ quote.id }}">Back to quote</a>
+        </div>
+      </aside>
+    </section>
+  } @else {
+    <app-state-panel
+      state="error"
+      testid="checkout-review"
+      heading="We could not open that quote"
+      message="Quote {{ quoteId() }} does not exist, or it is no longer available on this account. Nothing has been charged.">
+      <a panelAction class="btn btn-primary" routerLink="/quotes">Back to your quotes</a>
+    </app-state-panel>
+  }
+</div>

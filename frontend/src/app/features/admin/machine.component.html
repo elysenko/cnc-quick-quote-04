@@ -1,0 +1,136 @@
+<section class="stack" data-testid="admin-machine-page">
+  @if (saved()) {
+    <div class="alert alert-ok" role="status" data-testid="machine-saved">
+      <span aria-hidden="true">✓</span>
+      <span><strong>Saved</strong>Nesting, uploads and the work-bed animation now use these values.</span>
+    </div>
+  }
+
+  <form class="stack" (ngSubmit)="save()" novalidate>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Machine bed</h2>
+          <p class="hint">Bed size and clearances drive how many parts fit on a sheet.</p>
+        </div>
+      </div>
+
+      <div class="card-pad">
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="machine-bed-w">Bed width</label>
+            <input id="machine-bed-w" name="bedW" type="number" min="1" step="1" inputmode="numeric"
+                   data-testid="machine-bed-width"
+                   [ngModel]="bedW()" (ngModelChange)="bedW.set(num($event))" />
+            <span class="hint">Millimetres, across the gantry.</span>
+          </div>
+
+          <div class="field">
+            <label for="machine-bed-h">Bed height</label>
+            <input id="machine-bed-h" name="bedH" type="number" min="1" step="1" inputmode="numeric"
+                   data-testid="machine-bed-height"
+                   [ngModel]="bedH()" (ngModelChange)="bedH.set(num($event))" />
+            <span class="hint">Millimetres, along the bed.</span>
+          </div>
+
+          <div class="field">
+            <label for="machine-spacing">Part spacing</label>
+            <input id="machine-spacing" name="spacing" type="number" min="0" step="0.5" inputmode="decimal"
+                   data-testid="machine-spacing"
+                   [ngModel]="spacing()" (ngModelChange)="spacing.set(num($event))" />
+            <span class="hint">Millimetres of kerf clearance between nested parts.</span>
+          </div>
+
+          <div class="field">
+            <label for="machine-margin">Edge margin</label>
+            <input id="machine-margin" name="margin" type="number" min="0" step="0.5" inputmode="decimal"
+                   data-testid="machine-margin" [class.invalid]="marginError() !== null"
+                   [ngModel]="margin()" (ngModelChange)="margin.set(num($event))" />
+            @if (marginError(); as message) {
+              <span class="error-text" data-testid="machine-margin-error">{{ message }}</span>
+            } @else {
+              <span class="hint">Millimetres of unusable sheet kept clear at every edge.</span>
+            }
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="machine-speed">Animation speed</label>
+          <div class="range-row">
+            <input id="machine-speed" name="animationSpeed" type="range" min="0.2" max="3" step="0.1"
+                   data-testid="machine-animation-speed"
+                   [ngModel]="animationSpeed()" (ngModelChange)="animationSpeed.set(num($event))" />
+            <output class="num speed" for="machine-speed">{{ animationSpeed().toFixed(1) }}×</output>
+          </div>
+          <span class="hint">How fast the laser head traces the cut path on the result step. 1.0× is real-time-ish.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Uploads and quantities</h2>
+          <p class="hint">These bounds are enforced on the upload and material steps.</p>
+        </div>
+      </div>
+
+      <div class="card-pad">
+        <div class="field">
+          <label for="machine-ext">Allowed extensions</label>
+          <input id="machine-ext" name="extensions" type="text" autocapitalize="off" spellcheck="false"
+                 placeholder=".dxf, .dwg" data-testid="machine-extensions"
+                 [class.invalid]="extensionsError() !== null"
+                 [ngModel]="extensions()" (ngModelChange)="extensions.set($event)" />
+          @if (extensionsError(); as message) {
+            <span class="error-text" data-testid="machine-extensions-error">{{ message }}</span>
+          } @else {
+            <span class="hint">Comma-separated, leading dot included. Anything else is rejected at upload.</span>
+          }
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="machine-size">Max upload size</label>
+            <div class="unit-row">
+              <input id="machine-size" name="maxUploadMb" type="number" min="0.1" step="0.1" inputmode="decimal"
+                     data-testid="machine-max-upload"
+                     [ngModel]="maxUploadMb()" (ngModelChange)="maxUploadMb.set(num($event))" />
+              <span class="unit">MB</span>
+            </div>
+            <span class="hint">Stored in bytes. 10 MB is ample for a typical DXF outline.</span>
+          </div>
+
+          <div class="field">
+            <label for="machine-qty-min">Minimum quantity</label>
+            <input id="machine-qty-min" name="qtyMin" type="number" min="1" step="1" inputmode="numeric"
+                   data-testid="machine-qty-min" [class.invalid]="quantityError() !== null"
+                   [ngModel]="qtyMin()" (ngModelChange)="qtyMin.set(num($event))" />
+            <span class="hint">Fewest parts a customer may order.</span>
+          </div>
+
+          <div class="field">
+            <label for="machine-qty-max">Maximum quantity</label>
+            <input id="machine-qty-max" name="qtyMax" type="number" min="1" step="1" inputmode="numeric"
+                   data-testid="machine-qty-max" [class.invalid]="quantityError() !== null"
+                   [ngModel]="qtyMax()" (ngModelChange)="qtyMax.set(num($event))" />
+            @if (quantityError(); as message) {
+              <span class="error-text" data-testid="machine-qty-error">{{ message }}</span>
+            } @else {
+              <span class="hint">Most parts a single quote may cover.</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary" data-testid="machine-save" [disabled]="invalid()">
+        Save changes
+      </button>
+      <button type="button" class="btn btn-ghost" data-testid="machine-reset" (click)="reset()">Reset</button>
+      <span class="spacer"></span>
+      <span class="hint">Bed {{ bedW() }} × {{ bedH() }} mm.</span>
+    </div>
+  </form>
+</section>

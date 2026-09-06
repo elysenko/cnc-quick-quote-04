@@ -1,0 +1,95 @@
+<section class="stack" data-testid="admin-pricing-page">
+  @if (saved()) {
+    <div class="alert alert-ok" role="status" data-testid="pricing-saved">
+      <span aria-hidden="true">✓</span>
+      <span><strong>Saved</strong>New quotes are priced with these rates from now on.</span>
+    </div>
+  }
+
+  <form class="stack" (ngSubmit)="save()" novalidate>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Quote pricing</h2>
+          <p class="hint">Every rate is entered in dollars and stored to the cent.</p>
+        </div>
+      </div>
+
+      <div class="card-pad">
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="pricing-cut">Cost per linear foot</label>
+            <div class="money">
+              <span class="cur" aria-hidden="true">$</span>
+              <input id="pricing-cut" name="costPerLinearFt" type="number" min="0" step="0.01"
+                     inputmode="decimal" data-testid="pricing-cost-per-ft"
+                     [ngModel]="costPerLinearFt()" (ngModelChange)="costPerLinearFt.set(num($event))" />
+            </div>
+            <span class="hint">
+              Billed on total cut length. {{ exampleFeet }} linear ft at {{ costPerLinearFt().toFixed(2) }}/ft
+              bills {{ exampleCents() | money }}.
+            </span>
+          </div>
+
+          <div class="field">
+            <label for="pricing-bend">Cost per bend</label>
+            <div class="money">
+              <span class="cur" aria-hidden="true">$</span>
+              <input id="pricing-bend" name="costPerBend" type="number" min="0" step="0.01"
+                     inputmode="decimal" data-testid="pricing-cost-per-bend"
+                     [ngModel]="costPerBend()" (ngModelChange)="costPerBend.set(num($event))" />
+            </div>
+            <span class="hint">Per bend line, per part. Dollars per bend.</span>
+          </div>
+
+          <div class="field">
+            <label for="pricing-setup">Setup fee</label>
+            <div class="money">
+              <span class="cur" aria-hidden="true">$</span>
+              <input id="pricing-setup" name="setupFee" type="number" min="0" step="0.01"
+                     inputmode="decimal" data-testid="pricing-setup-fee"
+                     [ngModel]="setupFee()" (ngModelChange)="setupFee.set(num($event))" />
+            </div>
+            <span class="hint">Charged once per quote to cover programme and machine setup.</span>
+          </div>
+
+          <div class="field">
+            <label for="pricing-handling">Handling fee</label>
+            <div class="money">
+              <span class="cur" aria-hidden="true">$</span>
+              <input id="pricing-handling" name="handlingFee" type="number" min="0" step="0.01"
+                     inputmode="decimal" data-testid="pricing-handling-fee"
+                     [ngModel]="handlingFee()" (ngModelChange)="handlingFee.set(num($event))" />
+            </div>
+            <span class="hint">Deburr, packing and paperwork. Charged once per quote.</span>
+          </div>
+
+          <div class="field">
+            <label for="pricing-min">Minimum order</label>
+            <div class="money">
+              <span class="cur" aria-hidden="true">$</span>
+              <input id="pricing-min" name="minOrder" type="number" min="0" step="0.01"
+                     inputmode="decimal" data-testid="pricing-min-order"
+                     [ngModel]="minOrder()" (ngModelChange)="minOrder.set(num($event))" />
+            </div>
+            <span class="hint">
+              Quotes below {{ minOrder().toFixed(2) }} are lifted to it with a "minimum order adjustment" line.
+            </span>
+          </div>
+        </div>
+
+        <p class="note">
+          Changing these rates never alters a quote that has already been generated — each quote snapshots
+          the pricing config at the moment it is created, so historical totals and breakdowns stay exact.
+        </p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary" data-testid="pricing-save">Save changes</button>
+      <button type="button" class="btn btn-ghost" data-testid="pricing-reset" (click)="reset()">Reset</button>
+      <span class="spacer"></span>
+      <span class="hint">Applies to new quotes only.</span>
+    </div>
+  </form>
+</section>

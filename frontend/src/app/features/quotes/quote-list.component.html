@@ -1,0 +1,106 @@
+<section class="page" data-testid="quote-list-page">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Quotes</p>
+      <h1>Saved quotes</h1>
+      <p>Every quote you have generated. The price on a quote is locked at the moment it was created.</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/quote/new/upload" data-testid="quote-list-new">New quote</a>
+  </header>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>{{ total() }} {{ total() === 1 ? 'quote' : 'quotes' }}</h2>
+      <div class="sorter">
+        <label class="sr-only" for="quotes-sort">Sort quotes</label>
+        <select id="quotes-sort" data-testid="quotes-sort"
+                [value]="sort()" (change)="setSort($any($event.target).value)">
+          @for (option of sortOptions; track option.value) {
+            <option [value]="option.value" [selected]="option.value === sort()">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="panel-pad">
+        <app-state-panel state="loading" testid="quotes" message="Fetching your saved quotes…" />
+      </div>
+    } @else if (total() === 0) {
+      <div class="panel-pad">
+        <app-state-panel
+          state="empty"
+          testid="quotes"
+          heading="No quotes yet"
+          message="Upload a DXF and pick a material — you will have an itemised price in a few seconds.">
+          <a panelAction class="btn btn-primary btn-sm" routerLink="/quote/new/upload">Start a quote</a>
+        </app-state-panel>
+      </div>
+    } @else {
+      <div data-testid="quotes-list">
+        <div class="table-wrap desktop-only">
+          <table class="data">
+            <thead>
+              <tr>
+                <th scope="col">Quote</th>
+                <th scope="col">Material</th>
+                <th scope="col">Qty</th>
+                <th scope="col">Sheets</th>
+                <th scope="col">Total</th>
+                <th scope="col">Created</th>
+                <th scope="col"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (quote of visible(); track quote.id) {
+                <tr [attr.data-testid]="'quote-row-' + quote.id">
+                  <td>
+                    <span class="ref"><strong class="mono">{{ quote.id }}</strong><small>{{ quote.drawingName }}</small></span>
+                  </td>
+                  <td>{{ quote.materialName }}</td>
+                  <td class="num">{{ quote.quantity }}</td>
+                  <td class="num">{{ quote.nesting.sheets }}</td>
+                  <td class="num strong">{{ quote.totalCents | money }}</td>
+                  <td class="num">{{ quote.createdAt | date: 'd MMM y' }}</td>
+                  <td class="right">
+                    <a class="btn btn-ghost btn-sm" [routerLink]="['/quotes', quote.id]"
+                       [attr.data-testid]="'quote-view-' + quote.id">View</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <ul class="cards mobile-only">
+          @for (quote of visible(); track quote.id) {
+            <li class="qcard" [attr.data-testid]="'quote-card-' + quote.id">
+              <div class="qcard-head">
+                <span class="ref"><strong class="mono">{{ quote.id }}</strong><small>{{ quote.drawingName }}</small></span>
+                <span class="num strong">{{ quote.totalCents | money }}</span>
+              </div>
+              <p class="qcard-meta">
+                {{ quote.quantity }} × {{ quote.materialName }} · {{ quote.nesting.sheets }}
+                {{ quote.nesting.sheets === 1 ? 'sheet' : 'sheets' }}
+              </p>
+              <div class="qcard-foot">
+                <span class="num muted">{{ quote.createdAt | date: 'd MMM y' }}</span>
+                <a class="btn btn-ghost btn-sm" [routerLink]="['/quotes', quote.id]">View</a>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <nav class="pager" aria-label="Pagination" data-testid="quotes-pager">
+        <button type="button" class="btn btn-ghost btn-sm" data-testid="quotes-prev"
+                [disabled]="!hasPrev()" (click)="goTo(page() - 1)">Previous</button>
+        <span class="pager-text num">
+          Page {{ page() }} of {{ pageCount() }} · showing {{ firstIndex() }}–{{ lastIndex() }} of {{ total() }}
+        </span>
+        <button type="button" class="btn btn-ghost btn-sm" data-testid="quotes-next"
+                [disabled]="!hasNext()" (click)="goTo(page() + 1)">Next</button>
+      </nav>
+    }
+  </div>
+</section>

@@ -1,0 +1,92 @@
+<section class="stack" data-testid="admin-payment-page">
+  @if (saved()) {
+    <div class="alert alert-ok" role="status" data-testid="payment-saved">
+      <span aria-hidden="true">✓</span>
+      <span><strong>Saved</strong>Secrets were re-encrypted; the inputs have been cleared.</span>
+    </div>
+  }
+
+  <form class="stack" (ngSubmit)="save()" novalidate>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Stripe credentials</h2>
+          <p class="hint">Used for hosted checkout sessions and webhook signature verification.</p>
+        </div>
+        @if (sandboxMode()) {
+          <span class="badge badge-warn" data-testid="payment-mode-badge">Sandbox</span>
+        } @else {
+          <span class="badge badge-ok" data-testid="payment-mode-badge">Live</span>
+        }
+      </div>
+
+      <div class="card-pad">
+        <div class="alert alert-info" data-testid="payment-secrets-note">
+          <span aria-hidden="true">i</span>
+          <span>
+            <strong>How these are handled</strong>
+            Environment variables take precedence in production — a value set there wins over anything
+            stored here. Secrets are encrypted at rest, and only the last four characters are ever
+            returned by the API, so an existing key can be confirmed but never read back.
+          </span>
+        </div>
+
+        <div class="field">
+          <label for="pay-pk">Stripe publishable key</label>
+          <input id="pay-pk" name="publishableKey" type="text" class="mono" autocapitalize="off"
+                 spellcheck="false" placeholder="pk_test_…" data-testid="payment-publishable-key"
+                 [ngModel]="publishableKey()" (ngModelChange)="publishableKey.set($event)" />
+          <span class="hint">Safe to expose — it ships to the browser with the checkout session.</span>
+        </div>
+
+        <div class="field">
+          <label for="pay-sk">Stripe secret key</label>
+          <input id="pay-sk" name="secretKey" type="password" class="mono" autocomplete="off"
+                 spellcheck="false" placeholder="Enter a new secret key to replace the stored one"
+                 data-testid="payment-secret-key"
+                 [ngModel]="secretKey()" (ngModelChange)="secretKey.set($event)" />
+          <span class="stored-row">
+            <span class="hint">Currently stored:</span>
+            @if (secretKeyMasked()) {
+              <span class="mono stored" data-testid="payment-secret-key-stored">{{ secretKeyMasked() }}</span>
+            } @else {
+              <span class="badge badge-muted" data-testid="payment-secret-key-stored">Not set</span>
+            }
+          </span>
+        </div>
+
+        <div class="field">
+          <label for="pay-whsec">Stripe webhook signing secret</label>
+          <input id="pay-whsec" name="webhookSecret" type="password" class="mono" autocomplete="off"
+                 spellcheck="false" placeholder="Enter a new signing secret to replace the stored one"
+                 data-testid="payment-webhook-secret"
+                 [ngModel]="webhookSecret()" (ngModelChange)="webhookSecret.set($event)" />
+          <span class="stored-row">
+            <span class="hint">Currently stored:</span>
+            @if (webhookSecretMasked()) {
+              <span class="mono stored" data-testid="payment-webhook-secret-stored">{{ webhookSecretMasked() }}</span>
+            } @else {
+              <span class="badge badge-muted" data-testid="payment-webhook-secret-stored">Not set</span>
+            }
+          </span>
+        </div>
+
+        <label class="switch" data-testid="payment-sandbox-toggle">
+          <input type="checkbox" name="sandboxMode"
+                 [ngModel]="sandboxMode()" (ngModelChange)="sandboxMode.set($event)" />
+          <span>
+            <strong>Sandbox mode</strong>
+            <span class="hint switch-hint">Route every checkout to Stripe test mode. No card is ever charged.</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary" data-testid="payment-save">Save changes</button>
+      <button type="button" class="btn btn-ghost" data-testid="payment-reset" (click)="reset()">Reset</button>
+      <span class="spacer"></span>
+      <span class="hint">Leave a secret field blank to keep the stored value.</span>
+    </div>
+  </form>
+</section>

@@ -1,0 +1,65 @@
+/* Progress header — kept byte-identical across the checkout screens. */
+.steps { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--space-2); margin-bottom: var(--space-5); }
+.step-body {
+  display: flex; align-items: center; gap: var(--space-2); width: 100%;
+  min-height: var(--tap-min); padding: var(--space-2) var(--space-3);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: 600;
+  color: var(--color-text-muted); text-decoration: none;
+}
+a.step-body:hover { background: var(--color-surface-alt); text-decoration: none; }
+.step.active .step-body { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary); }
+.step.done .step-body { color: var(--color-success); border-color: var(--color-success-border); }
+.dot {
+  display: grid; place-items: center; flex: 0 0 auto; width: 24px; height: 24px;
+  border-radius: var(--radius-pill); background: var(--color-surface-sunken);
+  font-size: var(--text-xs); font-weight: 800;
+}
+.step.active .dot { background: var(--color-primary); color: var(--color-primary-contrast); }
+.step.done .dot { background: var(--color-success-soft); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: var(--space-4); align-items: start; }
+.card-head .hint { margin: 0; }
+
+.methods { display: flex; flex-direction: column; gap: var(--space-3); }
+.method {
+  display: flex; align-items: flex-start; gap: var(--space-3); width: 100%;
+  min-height: var(--tap-min); padding: var(--space-3) var(--space-4); text-align: left;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); font: inherit; cursor: pointer;
+  transition: border-color .15s, background-color .15s;
+}
+.method:hover, .method:active { border-color: var(--color-border-strong); background: var(--color-surface-alt); }
+.method.picked { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.mark {
+  flex: 0 0 auto; width: 18px; height: 18px; margin-top: 3px; border-radius: var(--radius-pill);
+  border: 2px solid var(--color-border-strong); background: var(--color-surface);
+}
+.method.picked .mark { border-color: var(--color-primary); box-shadow: inset 0 0 0 3px var(--color-primary); }
+.m-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.m-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.m-cost { font-weight: 700; white-space: nowrap; }
+.m-meta { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+.alert p { margin: 0 0 var(--space-2); }
+.alert p:last-child { margin-bottom: 0; }
+.alert .contact a { color: inherit; text-decoration: underline; }
+.alert .ref { font-size: var(--text-xs); }
+.glyph { font-weight: 800; }
+
+.addr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 var(--space-4); }
+
+.lines li { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-border); }
+.l-label { display: flex; flex-direction: column; }
+.l-label small { font-size: var(--text-xs); color: var(--color-text-muted); }
+.l-amount { font-weight: 600; white-space: nowrap; }
+.total { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-5); background: var(--color-surface-alt); font-size: var(--text-md); }
+.total strong { font-size: var(--text-lg); }
+.fine { padding: var(--space-3) var(--space-5) 0; margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+.cta { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4) var(--space-5) var(--space-5); }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  .step-label { display: none; }
+  .step-body { justify-content: center; padding: var(--space-2); }
+}

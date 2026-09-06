@@ -1,0 +1,18 @@
+@if (state === 'loading') {
+  <div class="panel" [attr.data-testid]="testid + '-loading'" role="status">
+    <div class="spinner" aria-hidden="true"></div>
+    <p class="msg">{{ message || 'Fetching the latest data…' }}</p>
+  </div>
+} @else if (state !== 'ready') {
+  <!-- One projection slot only: a second <ng-content> with the same selector
+       would silently swallow the projected action. -->
+  <div class="panel" [attr.data-testid]="testid + '-' + state"
+       [attr.role]="state === 'error' ? 'alert' : null">
+    <span class="glyph" [class.muted]="state === 'empty'" aria-hidden="true">
+      {{ state === 'error' ? '!' : '—' }}
+    </span>
+    <h3>{{ heading || (state === 'error' ? 'Something went wrong' : 'Nothing here yet') }}</h3>
+    <p class="msg">{{ message }}</p>
+    <ng-content select="[panelAction]" />
+  </div>
+}

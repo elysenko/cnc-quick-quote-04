@@ -1,0 +1,96 @@
+/**
+ * Design tokens — CNC Quick Quote.
+ * Industrial workshop palette: steel-blue primary, laser-orange accent,
+ * dark machine-bed surface. Every component references these via var(--*).
+ * Branding-driven values (--color-primary/--color-accent) are overwritten at
+ * runtime by BrandingService from GET /api/branding.
+ */
+:root {
+  /* Brand */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-soft: #e8efff;
+  --color-primary-contrast: #ffffff;
+  --color-accent: #f97316;
+  --color-accent-hover: #ea580c;
+  --color-accent-soft: #fff1e6;
+
+  /* Neutrals */
+  --color-bg: #f4f6fa;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8fafc;
+  --color-surface-sunken: #eef1f6;
+  --color-border: #dde3ec;
+  --color-border-strong: #c3ccda;
+  --color-text: #0f172a;
+  --color-text-muted: #5a677d;
+  --color-text-faint: #8a96a8;
+
+  /* On-dark surfaces (auth panel, machine bed) */
+  --color-on-dark: #e6edf9;
+  --color-on-dark-soft: #c8d5ea;
+  --color-on-dark-muted: #9fb0cd;
+  --color-on-dark-faint: #7d8ca6;
+  --color-on-brand: #ffffff;
+  --scrim: rgba(15, 23, 42, 0.55);
+  --glow-primary: rgba(37, 99, 235, 0.38);
+  --tint-on-dark: rgba(148, 178, 232, 0.16);
+
+  /* Machine bed / canvas */
+  --color-bed: #0f172a;
+  --color-bed-alt: #16213a;
+  --color-bed-grid: #24334f;
+  --color-cut: #38bdf8;
+  --color-bend: #fb923c;
+
+  /* Status */
+  --color-success: #15803d;
+  --color-success-soft: #e6f6ec;
+  --color-success-border: #bfe3cc;
+  --color-warning: #b45309;
+  --color-warning-soft: #fdf3e3;
+  --color-warning-border: #f0d9b0;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fdeaea;
+  --color-danger-border: #f3c6c6;
+  --color-info: #1d4ed8;
+  --color-info-soft: #e8efff;
+  --color-info-border: #c9d9ff;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Type */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-md: 17px;
+  --text-lg: 21px;
+  --text-xl: 27px;
+  --text-2xl: 34px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 18px 40px rgba(15, 23, 42, 0.16);
+
+  /* Layout */
+  --sidebar-w: 244px;
+  --topbar-h: 60px;
+  --tabbar-h: 62px;
+  --tap-min: 44px;
+}

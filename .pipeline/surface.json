@@ -1,22 +1,1286 @@
 {
   "_generated": true,
   "_scaffolded_at": "2026-09-06T09:10:00Z",
-  "fileBudget": { "maxLines": 400, "hardLimit": 500 },
+  "fileBudget": {
+    "maxLines": 400,
+    "hardLimit": 500
+  },
   "routes": [
-    { "method": "GET", "path": "/health" },
-    { "method": "GET", "path": "/trpc/users.findAll" },
-    { "method": "GET", "path": "/trpc/users.findById" }
+    {
+      "method": "GET",
+      "path": "/api/health"
+    },
+    {
+      "method": "GET",
+      "path": "/api/health/deep"
+    },
+    {
+      "method": "GET",
+      "path": "/api/branding"
+    },
+    {
+      "method": "POST",
+      "path": "/api/drawings"
+    },
+    {
+      "method": "POST",
+      "path": "/api/webhooks/stripe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/receipts/:orderId"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/auth.register"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/auth.login"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/auth.refresh"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/auth.logout"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/auth.me"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/materials.list"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/drawings.get"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/drawings.listMine"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/bends.create"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/bends.update"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/bends.delete"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/bends.listForDrawing"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/quotes.create"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/quotes.list"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/quotes.getById"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/nesting.preview"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/shippingMethods.list"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/checkout.createSession"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/orders.list"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/orders.getById"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/orders.getBySessionId"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.materials.list"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.materials.create"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.materials.update"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.materials.delete"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.pricingConfig.get"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.pricingConfig.update"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.machineConfig.get"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.machineConfig.update"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.businessConfig.get"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.businessConfig.update"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.paymentConfig.get"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.paymentConfig.update"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.shippingMethods.list"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.shippingMethods.create"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.shippingMethods.update"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.shippingMethods.delete"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.settings.list"
+    },
+    {
+      "method": "POST",
+      "path": "/trpc/admin.settings.update"
+    }
   ],
   "components": [
-    { "selector": "app-root", "file": "frontend/src/app/app.component.ts", "maxLines": 400 },
-    { "selector": "app-home", "file": "frontend/src/app/home/home.component.ts", "maxLines": 400 }
+    {
+      "selector": "app-root",
+      "file": "frontend/src/app/app.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-admin-shell",
+      "file": "frontend/src/app/features/admin/admin-shell.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-admin-branding",
+      "file": "frontend/src/app/features/admin/branding.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-admin-machine",
+      "file": "frontend/src/app/features/admin/machine.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-admin-materials",
+      "file": "frontend/src/app/features/admin/materials.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-admin-payment",
+      "file": "frontend/src/app/features/admin/payment.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-admin-pricing",
+      "file": "frontend/src/app/features/admin/pricing.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-admin-settings",
+      "file": "frontend/src/app/features/admin/settings.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-admin-shipping",
+      "file": "frontend/src/app/features/admin/shipping.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-login",
+      "file": "frontend/src/app/features/auth/login.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-signup",
+      "file": "frontend/src/app/features/auth/signup.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-order-confirmation",
+      "file": "frontend/src/app/features/checkout/confirmation.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-checkout-payment",
+      "file": "frontend/src/app/features/checkout/payment.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-checkout-review",
+      "file": "frontend/src/app/features/checkout/review.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-checkout-shipping",
+      "file": "frontend/src/app/features/checkout/shipping.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-not-found",
+      "file": "frontend/src/app/features/not-found.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-order-list",
+      "file": "frontend/src/app/features/orders/order-list.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-bend-editor",
+      "file": "frontend/src/app/features/quote/bend-editor.canvas.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-bend-step",
+      "file": "frontend/src/app/features/quote/bend-step.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-material-step",
+      "file": "frontend/src/app/features/quote/material-step.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-quote-wizard",
+      "file": "frontend/src/app/features/quote/quote-wizard.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-result-step",
+      "file": "frontend/src/app/features/quote/result-step.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-upload-step",
+      "file": "frontend/src/app/features/quote/upload-step.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-workbed",
+      "file": "frontend/src/app/features/quote/workbed/workbed.canvas.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-quote-detail",
+      "file": "frontend/src/app/features/quotes/quote-detail.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-quote-list",
+      "file": "frontend/src/app/features/quotes/quote-list.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-modal",
+      "file": "frontend/src/app/shared/modal.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-state-panel",
+      "file": "frontend/src/app/shared/state-panel.component.ts",
+      "maxLines": 400
+    }
   ],
   "testIds": [
-    { "id": "app-ready", "element": "div", "component": "app-root" },
-    { "id": "home-main", "element": "main", "component": "app-home" },
-    { "id": "home-title", "element": "h1", "component": "app-home" },
-    { "id": "users-loading", "element": "p", "component": "app-home" },
-    { "id": "users-error", "element": "p", "component": "app-home" },
-    { "id": "users-list", "element": "ul", "component": "app-home" }
+    {
+      "id": "app-ready",
+      "component": "app-root"
+    },
+    {
+      "id": "app-sidebar",
+      "component": "app-root"
+    },
+    {
+      "id": "sign-out",
+      "component": "app-root"
+    },
+    {
+      "id": "app-topbar",
+      "component": "app-root"
+    },
+    {
+      "id": "sign-out-mobile",
+      "component": "app-root"
+    },
+    {
+      "id": "app-tabbar",
+      "component": "app-root"
+    },
+    {
+      "id": "admin-shell",
+      "component": "app-admin-shell"
+    },
+    {
+      "id": "admin-unconfigured-banner",
+      "component": "app-admin-shell"
+    },
+    {
+      "id": "admin-banner-link",
+      "component": "app-admin-shell"
+    },
+    {
+      "id": "admin-tabs",
+      "component": "app-admin-shell"
+    },
+    {
+      "id": "admin-business-tabs",
+      "component": "app-admin-shell"
+    },
+    {
+      "id": "admin-branding-page",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-saved",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-company-name",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-logo-url",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-primary-color",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-primary-hex",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-primary-error",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-accent-color",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-accent-hex",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-accent-error",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-preview",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-contact-email",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-contact-phone",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-support-hours",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-address-line1",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-address-line2",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-city",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-region",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-postal-code",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-country",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-save",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "branding-reset",
+      "component": "app-admin-branding"
+    },
+    {
+      "id": "admin-machine-page",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-saved",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-bed-width",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-bed-height",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-spacing",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-margin",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-margin-error",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-animation-speed",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-extensions",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-extensions-error",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-max-upload",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-qty-min",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-qty-max",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-qty-error",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-save",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "machine-reset",
+      "component": "app-admin-machine"
+    },
+    {
+      "id": "admin-materials-page",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "add-material",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "materials-empty-add",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "materials-table",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "material-name",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "material-thickness",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "material-multiplier",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "material-width",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "material-height",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "material-active",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "material-form-error",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "material-cancel",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "material-save",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "delete-cancel",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "delete-confirm",
+      "component": "app-admin-materials"
+    },
+    {
+      "id": "admin-payment-page",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-saved",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-mode-badge",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-secrets-note",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-publishable-key",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-secret-key",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-secret-key-stored",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-webhook-secret",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-webhook-secret-stored",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-sandbox-toggle",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-save",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "payment-reset",
+      "component": "app-admin-payment"
+    },
+    {
+      "id": "admin-pricing-page",
+      "component": "app-admin-pricing"
+    },
+    {
+      "id": "pricing-saved",
+      "component": "app-admin-pricing"
+    },
+    {
+      "id": "pricing-cost-per-ft",
+      "component": "app-admin-pricing"
+    },
+    {
+      "id": "pricing-cost-per-bend",
+      "component": "app-admin-pricing"
+    },
+    {
+      "id": "pricing-setup-fee",
+      "component": "app-admin-pricing"
+    },
+    {
+      "id": "pricing-handling-fee",
+      "component": "app-admin-pricing"
+    },
+    {
+      "id": "pricing-min-order",
+      "component": "app-admin-pricing"
+    },
+    {
+      "id": "pricing-save",
+      "component": "app-admin-pricing"
+    },
+    {
+      "id": "pricing-reset",
+      "component": "app-admin-pricing"
+    },
+    {
+      "id": "admin-settings-page",
+      "component": "app-admin-settings"
+    },
+    {
+      "id": "settings-banner",
+      "component": "app-admin-settings"
+    },
+    {
+      "id": "settings-unconfigured-count",
+      "component": "app-admin-settings"
+    },
+    {
+      "id": "settings-list",
+      "component": "app-admin-settings"
+    },
+    {
+      "id": "admin-shipping-page",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-saved",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-none-active",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-add",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-methods-table",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-name",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-name-error",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-rate-type",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-amount",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-est-days",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-active-toggle",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-reset",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-save",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-delete-cancel",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "shipping-delete-confirm",
+      "component": "app-admin-shipping"
+    },
+    {
+      "id": "login-page",
+      "component": "app-login"
+    },
+    {
+      "id": "login-error",
+      "component": "app-login"
+    },
+    {
+      "id": "login-email",
+      "component": "app-login"
+    },
+    {
+      "id": "login-password",
+      "component": "app-login"
+    },
+    {
+      "id": "login-submit",
+      "component": "app-login"
+    },
+    {
+      "id": "login-preview-skip",
+      "component": "app-login"
+    },
+    {
+      "id": "login-to-signup",
+      "component": "app-login"
+    },
+    {
+      "id": "signup-page",
+      "component": "app-signup"
+    },
+    {
+      "id": "signup-error",
+      "component": "app-signup"
+    },
+    {
+      "id": "signup-name",
+      "component": "app-signup"
+    },
+    {
+      "id": "signup-email",
+      "component": "app-signup"
+    },
+    {
+      "id": "signup-password",
+      "component": "app-signup"
+    },
+    {
+      "id": "signup-confirm",
+      "component": "app-signup"
+    },
+    {
+      "id": "signup-submit",
+      "component": "app-signup"
+    },
+    {
+      "id": "signup-preview-skip",
+      "component": "app-signup"
+    },
+    {
+      "id": "signup-to-login",
+      "component": "app-signup"
+    },
+    {
+      "id": "order-confirmation-page",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "checkout-steps",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "confirmation-hero",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "order-number",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "confirmation-number",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "order-status",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "confirmation-details",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "order-email",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "order-items",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "order-shipping",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "order-total",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "order-address",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "confirmation-email-note",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "download-receipt",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "confirmation-view-orders",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "confirmation-new-quote",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "confirmation-contact",
+      "component": "app-order-confirmation"
+    },
+    {
+      "id": "checkout-payment-page",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "payment-cancelled",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "payment-cancelled-retry",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "payment-error",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "payment-error-retry",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "payment-redirecting",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "payment-sandbox",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "payment-pay",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "payment-back",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "payment-simulate-error",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "payment-amount",
+      "component": "app-checkout-payment"
+    },
+    {
+      "id": "checkout-review-page",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-quote-id",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-part",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-drawing",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-material",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-quantity",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-cut-length",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-bends",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-sheets",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-breakdown",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-total",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-continue",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "review-back",
+      "component": "app-checkout-review"
+    },
+    {
+      "id": "checkout-shipping-page",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-toggle-empty",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-blocked",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-methods",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-line1",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-line2",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-city",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-region",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-postal",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-country",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "summary-quote-total",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "summary-shipping",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "summary-grand-total",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-continue",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "shipping-back",
+      "component": "app-checkout-shipping"
+    },
+    {
+      "id": "not-found-page",
+      "component": "app-not-found"
+    },
+    {
+      "id": "not-found-new-quote",
+      "component": "app-not-found"
+    },
+    {
+      "id": "not-found-quotes",
+      "component": "app-not-found"
+    },
+    {
+      "id": "order-list-page",
+      "component": "app-order-list"
+    },
+    {
+      "id": "order-list-new",
+      "component": "app-order-list"
+    },
+    {
+      "id": "orders-status-filter",
+      "component": "app-order-list"
+    },
+    {
+      "id": "orders-list",
+      "component": "app-order-list"
+    },
+    {
+      "id": "bend-canvas",
+      "component": "app-bend-editor"
+    },
+    {
+      "id": "bend-step",
+      "component": "app-bend-step"
+    },
+    {
+      "id": "bend-angle",
+      "component": "app-bend-step"
+    },
+    {
+      "id": "bend-dir-up",
+      "component": "app-bend-step"
+    },
+    {
+      "id": "bend-dir-down",
+      "component": "app-bend-step"
+    },
+    {
+      "id": "bend-rotate",
+      "component": "app-bend-step"
+    },
+    {
+      "id": "bend-delete",
+      "component": "app-bend-step"
+    },
+    {
+      "id": "bends-empty",
+      "component": "app-bend-step"
+    },
+    {
+      "id": "bends-list",
+      "component": "app-bend-step"
+    },
+    {
+      "id": "material-step",
+      "component": "app-material-step"
+    },
+    {
+      "id": "materials-list",
+      "component": "app-material-step"
+    },
+    {
+      "id": "quantity-input",
+      "component": "app-material-step"
+    },
+    {
+      "id": "quantity-error",
+      "component": "app-material-step"
+    },
+    {
+      "id": "nesting-preview",
+      "component": "app-material-step"
+    },
+    {
+      "id": "nesting-sheets",
+      "component": "app-material-step"
+    },
+    {
+      "id": "nesting-blocked",
+      "component": "app-material-step"
+    },
+    {
+      "id": "quote-wizard",
+      "component": "app-quote-wizard"
+    },
+    {
+      "id": "wizard-steps",
+      "component": "app-quote-wizard"
+    },
+    {
+      "id": "wizard-back",
+      "component": "app-quote-wizard"
+    },
+    {
+      "id": "wizard-blocked",
+      "component": "app-quote-wizard"
+    },
+    {
+      "id": "wizard-next",
+      "component": "app-quote-wizard"
+    },
+    {
+      "id": "result-step",
+      "component": "app-result-step"
+    },
+    {
+      "id": "nesting-stats",
+      "component": "app-result-step"
+    },
+    {
+      "id": "result-blocked",
+      "component": "app-result-step"
+    },
+    {
+      "id": "price-breakdown",
+      "component": "app-result-step"
+    },
+    {
+      "id": "quote-total",
+      "component": "app-result-step"
+    },
+    {
+      "id": "proceed-to-checkout",
+      "component": "app-result-step"
+    },
+    {
+      "id": "upload-step",
+      "component": "app-upload-step"
+    },
+    {
+      "id": "upload-error",
+      "component": "app-upload-step"
+    },
+    {
+      "id": "upload-progress",
+      "component": "app-upload-step"
+    },
+    {
+      "id": "upload-dropzone",
+      "component": "app-upload-step"
+    },
+    {
+      "id": "upload-input",
+      "component": "app-upload-step"
+    },
+    {
+      "id": "upload-summary",
+      "component": "app-upload-step"
+    },
+    {
+      "id": "upload-entity-count",
+      "component": "app-upload-step"
+    },
+    {
+      "id": "upload-clear",
+      "component": "app-upload-step"
+    },
+    {
+      "id": "upload-empty",
+      "component": "app-upload-step"
+    },
+    {
+      "id": "workbed-canvas",
+      "component": "app-workbed"
+    },
+    {
+      "id": "print-bed-toggle",
+      "component": "app-workbed"
+    },
+    {
+      "id": "quote-detail-page",
+      "component": "app-quote-detail"
+    },
+    {
+      "id": "quote-detail-back",
+      "component": "app-quote-detail"
+    },
+    {
+      "id": "quote-detail-panel-open",
+      "component": "app-quote-detail"
+    },
+    {
+      "id": "quote-detail-breakdown",
+      "component": "app-quote-detail"
+    },
+    {
+      "id": "quote-detail-total",
+      "component": "app-quote-detail"
+    },
+    {
+      "id": "quote-detail-nesting",
+      "component": "app-quote-detail"
+    },
+    {
+      "id": "quote-nesting-scrim",
+      "component": "app-quote-detail"
+    },
+    {
+      "id": "quote-nesting-panel",
+      "component": "app-quote-detail"
+    },
+    {
+      "id": "quote-nesting-close",
+      "component": "app-quote-detail"
+    },
+    {
+      "id": "quote-nesting-sheets",
+      "component": "app-quote-detail"
+    },
+    {
+      "id": "quote-list-page",
+      "component": "app-quote-list"
+    },
+    {
+      "id": "quote-list-new",
+      "component": "app-quote-list"
+    },
+    {
+      "id": "quotes-sort",
+      "component": "app-quote-list"
+    },
+    {
+      "id": "quotes-list",
+      "component": "app-quote-list"
+    },
+    {
+      "id": "quotes-pager",
+      "component": "app-quote-list"
+    },
+    {
+      "id": "quotes-prev",
+      "component": "app-quote-list"
+    },
+    {
+      "id": "quotes-next",
+      "component": "app-quote-list"
+    }
   ]
 }

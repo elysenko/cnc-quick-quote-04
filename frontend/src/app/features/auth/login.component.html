@@ -1,0 +1,58 @@
+<div class="split">
+  <section class="aside">
+    <div class="mark"><span aria-hidden="true">◈</span> Halcyon Metalworks</div>
+    <div class="pitch">
+      <h2>Laser-cut parts, priced in seconds.</h2>
+      <p>Upload a DXF and get an itemised quote with real nesting and machine time — before you talk to anyone.</p>
+      <ul class="beats">
+        <li class="beat"><b aria-hidden="true">1</b><span>Drop in your drawing — we read cut length and part size automatically.</span></li>
+        <li class="beat"><b aria-hidden="true">2</b><span>Pick material and quantity; add bend lines right on the part.</span></li>
+        <li class="beat"><b aria-hidden="true">3</b><span>Watch the nest lay out on the bed, then check out by card.</span></li>
+      </ul>
+    </div>
+    <p class="legal">Quotes are locked at the moment they are generated.</p>
+  </section>
+
+  <section class="form-side">
+    <div class="form-card" data-testid="login-page">
+      <h1>Sign in</h1>
+      <p class="lede">Welcome back. Pick up where your last quote left off.</p>
+
+      @if (auth.error(); as message) {
+        <div class="alert alert-error" role="alert" data-testid="login-error">
+          <span aria-hidden="true">!</span><span>{{ message }}</span>
+        </div>
+      }
+
+      <form (ngSubmit)="submit()" novalidate>
+        <div class="field">
+          <label for="login-email">Email address</label>
+          <input id="login-email" name="email" type="email" autocomplete="email"
+                 placeholder="you@company.com" data-testid="login-email"
+                 [ngModel]="email()" (ngModelChange)="email.set($event)" />
+        </div>
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password"
+                 placeholder="Your password" data-testid="login-password"
+                 [ngModel]="password()" (ngModelChange)="password.set($event)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" data-testid="login-submit"
+                [disabled]="auth.pending()">
+          {{ auth.pending() ? 'Signing in…' : 'Sign in' }}
+        </button>
+      </form>
+
+      @if (auth.previewShortcut; as shortcutLabel) {
+        <div class="divider">or</div>
+        <div class="preview-skip">
+          <button type="button" class="btn btn-quiet btn-block" data-testid="login-preview-skip"
+                  (click)="auth.previewSignIn()">{{ shortcutLabel }}</button>
+        </div>
+      }
+
+      <p class="alt">New here? <a routerLink="/signup" data-testid="login-to-signup">Create an account</a></p>
+    </div>
+  </section>
+</div>

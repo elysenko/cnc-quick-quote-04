@@ -1,0 +1,184 @@
+<div class="page" data-testid="checkout-shipping-page">
+  @if (quote(); as quote) {
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Checkout</p>
+        <h1>Delivery</h1>
+        <p>Pick how the {{ quote.quantity }} finished parts leave the workshop, and tell us where they go.</p>
+      </div>
+      <span class="badge badge-muted mono">{{ quote.id }}</span>
+    </header>
+
+    <ol class="steps" data-testid="checkout-steps">
+      <li class="step done">
+        <a class="step-body" routerLink="/checkout/{{ quote.id }}/review">
+          <span class="dot" aria-hidden="true">✓</span><span class="step-label">Review</span>
+        </a>
+      </li>
+      <li class="step active">
+        <span class="step-body" aria-current="step">
+          <span class="dot" aria-hidden="true">2</span><span class="step-label">Shipping</span>
+        </span>
+      </li>
+      <li class="step">
+        <span class="step-body">
+          <span class="dot" aria-hidden="true">3</span><span class="step-label">Payment</span>
+        </span>
+      </li>
+    </ol>
+
+    <section class="layout">
+      <div class="stack">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>Shipping method</h2>
+              <p class="hint">Rates are live from the workshop's carrier table, priced against {{ sheets() }} sheet(s).</p>
+            </div>
+            <button type="button" class="btn btn-quiet btn-sm" data-testid="shipping-toggle-empty"
+                    [attr.aria-pressed]="previewEmpty()" (click)="toggleEmpty()">
+              {{ previewEmpty() ? 'Preview: restore methods' : 'Preview: no methods active' }}
+            </button>
+          </div>
+
+          <div class="card-pad">
+            @if (blocked()) {
+              <div class="alert alert-error" role="alert" data-testid="shipping-blocked">
+                <span class="glyph" aria-hidden="true">!</span>
+                <div>
+                  <strong>We cannot price delivery for this order</strong>
+                  <p>
+                    No shipping method is currently active, so this order cannot be completed online.
+                    Nothing has been charged and your quote is untouched.
+                  </p>
+                  @if (business(); as business) {
+                    <p class="contact">
+                      Contact {{ business.companyName }} and we will arrange freight by hand:
+                      <a href="mailto:{{ business.contactEmail }}">{{ business.contactEmail }}</a>
+                      · <a href="tel:{{ business.contactPhone }}">{{ business.contactPhone }}</a>
+                      · {{ business.supportHours }}
+                    </p>
+                  }
+                  <p class="ref">Quote reference <span class="mono">{{ quote.id }}</span>.</p>
+                </div>
+              </div>
+            } @else {
+              <ul class="methods" role="radiogroup" aria-label="Shipping method" data-testid="shipping-methods">
+                @for (method of methods(); track method.id) {
+                  <li>
+                    <button type="button" class="method" role="radio"
+                            [class.picked]="selected()?.id === method.id"
+                            [attr.aria-checked]="selected()?.id === method.id"
+                            [attr.data-testid]="'shipping-method-' + method.id"
+                            (click)="select(method.id)">
+                      <span class="mark" aria-hidden="true"></span>
+                      <span class="m-body">
+                        <span class="m-head">
+                          <strong>{{ method.name }}</strong>
+                          <span class="num m-cost">{{ method.computedCents | money }}</span>
+                        </span>
+                        <span class="m-meta num">
+                          {{ rateLabel(method) }} · arrives in about {{ method.estDeliveryDays }} working day(s)
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Shipping address</h2>
+            <span class="badge badge-muted">Kerbside delivery</span>
+          </div>
+          <div class="card-pad">
+            <div class="field">
+              <label for="ship-line1">Address line 1</label>
+              <input id="ship-line1" type="text" autocomplete="address-line1" data-testid="shipping-line1"
+                     [value]="line1()" (input)="line1.set($any($event.target).value)" />
+            </div>
+            <div class="field">
+              <label for="ship-line2">Address line 2</label>
+              <input id="ship-line2" type="text" autocomplete="address-line2" data-testid="shipping-line2"
+                     [value]="line2()" (input)="line2.set($any($event.target).value)" />
+              <span class="hint">Unit, dock or gate number — helps the driver find you.</span>
+            </div>
+            <div class="addr-grid">
+              <div class="field">
+                <label for="ship-city">City</label>
+                <input id="ship-city" type="text" autocomplete="address-level2" data-testid="shipping-city"
+                       [value]="city()" (input)="city.set($any($event.target).value)" />
+              </div>
+              <div class="field">
+                <label for="ship-region">Region / state</label>
+                <input id="ship-region" type="text" autocomplete="address-level1" data-testid="shipping-region"
+                       [value]="region()" (input)="region.set($any($event.target).value)" />
+              </div>
+              <div class="field">
+                <label for="ship-postal">Postal code</label>
+                <input id="ship-postal" type="text" autocomplete="postal-code" data-testid="shipping-postal"
+                       [value]="postalCode()" (input)="postalCode.set($any($event.target).value)" />
+              </div>
+              <div class="field">
+                <label for="ship-country">Country</label>
+                <input id="ship-country" type="text" autocomplete="country-name" data-testid="shipping-country"
+                       [value]="country()" (input)="country.set($any($event.target).value)" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card sum-card">
+        <div class="card-head"><h2>Order summary</h2></div>
+        <ul class="lines">
+          <li>
+            <span class="l-label">
+              <strong>Quote total</strong>
+              <small>{{ quote.quantity }} × {{ quote.drawingName }}</small>
+            </span>
+            <span class="num l-amount" data-testid="summary-quote-total">{{ quote.totalCents | money }}</span>
+          </li>
+          <li>
+            <span class="l-label">
+              <strong>Shipping</strong>
+              <small>{{ selected() ? selected()!.name : 'No method available' }}</small>
+            </span>
+            <span class="num l-amount" data-testid="summary-shipping">
+              @if (selected()) { {{ shippingCents() | money }} } @else { — }
+            </span>
+          </li>
+        </ul>
+        <div class="total">
+          <span>Grand total</span>
+          <strong class="num" data-testid="summary-grand-total">{{ grandTotalCents() | money }}</strong>
+        </div>
+        <p class="fine">
+          @if (blocked()) {
+            Checkout is on hold until a delivery rate exists — we will not create an unpriced order.
+          } @else {
+            Delivered to {{ city() }}, {{ region() }} {{ postalCode() }} in about
+            {{ selected()?.estDeliveryDays }} working day(s) after despatch.
+          }
+        </p>
+        <div class="cta">
+          <button type="button" class="btn btn-primary btn-block" data-testid="shipping-continue"
+                  [disabled]="!canContinue()" (click)="continueToPayment()">Continue to payment</button>
+          <a class="btn btn-ghost btn-block" data-testid="shipping-back"
+             routerLink="/checkout/{{ quote.id }}/review">Back to review</a>
+        </div>
+      </aside>
+    </section>
+  } @else {
+    <app-state-panel
+      state="error"
+      testid="checkout-shipping"
+      heading="We could not open that quote"
+      message="Quote {{ quoteId() }} does not exist, or it is no longer available on this account. Nothing has been charged.">
+      <a panelAction class="btn btn-primary" routerLink="/quotes">Back to your quotes</a>
+    </app-state-panel>
+  }
+</div>

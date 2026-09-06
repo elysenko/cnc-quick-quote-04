@@ -1,0 +1,121 @@
+<div class="page" data-testid="order-confirmation-page">
+  @if (order(); as order) {
+    <ol class="steps" data-testid="checkout-steps">
+      <li class="step done">
+        <span class="step-body"><span class="dot" aria-hidden="true">✓</span><span class="step-label">Review</span></span>
+      </li>
+      <li class="step done">
+        <span class="step-body"><span class="dot" aria-hidden="true">✓</span><span class="step-label">Shipping</span></span>
+      </li>
+      <li class="step done">
+        <span class="step-body"><span class="dot" aria-hidden="true">✓</span><span class="step-label">Payment</span></span>
+      </li>
+    </ol>
+
+    <section class="hero card card-pad" data-testid="confirmation-hero">
+      <span class="tick" aria-hidden="true">✓</span>
+      <h1>Order confirmed</h1>
+      <p class="lede">Payment cleared and your job is queued for the bed. Here is everything you need to track it.</p>
+      <div class="refs">
+        <div class="ref">
+          <span class="ref-label">Order number</span>
+          <strong class="mono ref-value" data-testid="order-number">{{ order.orderNumber }}</strong>
+        </div>
+        <div class="ref">
+          <span class="ref-label">Confirmation number</span>
+          <strong class="mono ref-value" data-testid="confirmation-number">{{ order.confirmationNumber }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="stack">
+        <div class="card">
+          <div class="card-head">
+            <h2>Order detail</h2>
+            <span [class]="statusClass(order.status)" data-testid="order-status">{{ statusLabel(order.status) }}</span>
+          </div>
+          <div class="card-pad">
+            <dl class="dl" data-testid="confirmation-details">
+              <dt>Placed</dt>
+              <dd>{{ order.createdAt | date: 'd MMM y, HH:mm' }}</dd>
+              <dt>Email</dt>
+              <dd data-testid="order-email">{{ order.email }}</dd>
+              <dt>Items</dt>
+              <dd data-testid="order-items">{{ order.itemSummary }}</dd>
+              <dt>From quote</dt>
+              <dd class="mono">{{ order.quoteId }}</dd>
+              <dt>Shipping</dt>
+              <dd data-testid="order-shipping">
+                {{ order.shippingMethodName }} — about {{ order.estDeliveryDays }} working day(s) from despatch
+              </dd>
+              <dt>Total paid</dt>
+              <dd class="num" data-testid="order-total">{{ order.totalCents | money }}</dd>
+            </dl>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>Delivering to</h2></div>
+          <div class="card-pad">
+            <address class="addr" data-testid="order-address">
+              <span>{{ order.shippingAddress.line1 }}</span>
+              @if (order.shippingAddress.line2) { <span>{{ order.shippingAddress.line2 }}</span> }
+              <span>{{ order.shippingAddress.city }}, {{ order.shippingAddress.region }} {{ order.shippingAddress.postalCode }}</span>
+              <span>{{ order.shippingAddress.country }}</span>
+            </address>
+            <p class="hint">
+              The driver calls ahead on the number held against your account. Kerbside unless a dock was agreed.
+            </p>
+          </div>
+        </div>
+
+        <p class="fine" data-testid="confirmation-email-note">
+          A confirmation email is on its way to {{ order.email }}. Delivery of that email is independent of your
+          order — if it is slow, or lands in spam, the order is still confirmed and already in the queue.
+        </p>
+      </div>
+
+      <aside class="stack">
+        <div class="card card-pad actions-card">
+          <h2>Next steps</h2>
+          <a class="btn btn-ghost btn-block" data-testid="download-receipt"
+             href="/api/receipts/{{ order.id }}" download>Download receipt</a>
+          <a class="btn btn-primary btn-block" data-testid="confirmation-view-orders"
+             routerLink="/orders">View all orders</a>
+          <a class="btn btn-quiet btn-block" data-testid="confirmation-new-quote"
+             routerLink="/quote/new/upload">Start another quote</a>
+        </div>
+
+        @if (business(); as business) {
+          <div class="card card-pad contact-card" data-testid="confirmation-contact">
+            <h2>{{ business.companyName }}</h2>
+            <dl class="dl">
+              <dt>Email</dt>
+              <dd><a href="mailto:{{ business.contactEmail }}">{{ business.contactEmail }}</a></dd>
+              <dt>Phone</dt>
+              <dd><a href="tel:{{ business.contactPhone }}">{{ business.contactPhone }}</a></dd>
+              <dt>Hours</dt>
+              <dd>{{ business.supportHours }}</dd>
+            </dl>
+            <address class="addr">
+              <span>{{ business.addressLine1 }}</span>
+              @if (business.addressLine2) { <span>{{ business.addressLine2 }}</span> }
+              <span>{{ business.city }}, {{ business.region }} {{ business.postalCode }}</span>
+              <span>{{ business.country }}</span>
+            </address>
+            <p class="hint">Quote your order number and we can pull the job card up straight away.</p>
+          </div>
+        }
+      </aside>
+    </section>
+  } @else {
+    <app-state-panel
+      state="error"
+      testid="order-confirmation"
+      heading="We could not open that order"
+      message="Order {{ orderId() }} does not exist, or it is no longer available on this account.">
+      <a panelAction class="btn btn-primary" routerLink="/orders">Back to your orders</a>
+    </app-state-panel>
+  }
+</div>

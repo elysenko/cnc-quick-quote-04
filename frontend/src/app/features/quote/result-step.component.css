@@ -1,0 +1,28 @@
+.layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(290px, 1fr); gap: var(--space-4); align-items: start; }
+.hint { margin: 0; }
+.card-title { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
+.card-title h2 { margin: 0; }
+
+.sheet-switch { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.sheet-switch button {
+  min-height: var(--tap-min); padding: 0 var(--space-3); font: inherit; font-size: var(--text-sm); font-weight: 600;
+  border: 1px solid var(--color-border-strong); background: var(--color-surface); border-radius: var(--radius-sm);
+  color: var(--color-text-muted); cursor: pointer;
+}
+.sheet-switch button.on { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary); }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
+.stats li { display: flex; flex-direction: column; gap: 2px; padding: var(--space-3); background: var(--color-surface-alt); border-radius: var(--radius-sm); }
+.stats span { font-size: var(--text-xs); color: var(--color-text-muted); }
+.stats b { font-size: var(--text-md); }
+
+.lines li { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-border); }
+.l-label { display: flex; flex-direction: column; }
+.l-label small { font-size: var(--text-xs); color: var(--color-text-muted); }
+.l-amount { font-weight: 600; white-space: nowrap; }
+.total { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-5); background: var(--color-surface-alt); font-size: var(--text-md); }
+.total strong { font-size: var(--text-lg); }
+.fine { padding: var(--space-3) var(--space-5) 0; margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+.cta { padding: var(--space-4) var(--space-5) var(--space-5); }
+
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }

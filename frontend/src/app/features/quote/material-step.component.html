@@ -1,0 +1,73 @@
+<section class="layout" data-testid="material-step">
+  <div class="stack">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Choose a material</h2>
+          <p class="hint">Only materials currently stocked and active are quotable.</p>
+        </div>
+      </div>
+
+      @if (materials().length === 0) {
+        <app-state-panel
+          state="empty"
+          testid="materials"
+          heading="No materials are available"
+          message="An administrator needs to add and activate at least one material before quotes can be priced.">
+          <a panelAction class="btn btn-ghost btn-sm" routerLink="/admin/materials">Open material settings</a>
+        </app-state-panel>
+      } @else {
+        <ul class="mats" data-testid="materials-list">
+          @for (material of materials(); track material.id) {
+            <li>
+              <button type="button" class="mat" [class.picked]="material.id === draft.materialId()"
+                      [attr.data-testid]="'material-' + material.id" (click)="select(material.id)"
+                      [attr.aria-pressed]="material.id === draft.materialId()">
+                <span class="mat-head">
+                  <strong>{{ material.name }}</strong>
+                  @if (material.id === draft.materialId()) { <span class="badge badge-info">Selected</span> }
+                </span>
+                <span class="mat-meta num">
+                  {{ material.thicknessMm }} mm thick · sheet {{ material.sheetWMm }} × {{ material.sheetHMm }} mm
+                </span>
+                <span class="mat-mult num">{{ material.costMultiplier.toFixed(2) }}× cost multiplier</span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+
+  <aside class="card card-pad side">
+    <h2>Quantity</h2>
+    <div class="field">
+      <label for="qty">How many parts?</label>
+      <input id="qty" type="number" inputmode="numeric" data-testid="quantity-input"
+             [class.invalid]="quantityError() !== null"
+             [min]="machine().qtyMin" [max]="machine().qtyMax"
+             [value]="draft.quantity()" (input)="setQuantity($any($event.target).value)" />
+      @if (quantityError(); as message) {
+        <span class="error-text" data-testid="quantity-error">{{ message }}</span>
+      } @else {
+        <span class="hint">Between {{ machine().qtyMin }} and {{ machine().qtyMax }} parts.</span>
+      }
+    </div>
+
+    <h3>Sheet preview</h3>
+    @if (draft.nesting(); as nesting) {
+      <dl class="dl" data-testid="nesting-preview">
+        <dt>Per sheet</dt><dd class="num">{{ nesting.perSheet }} parts ({{ nesting.cols }} × {{ nesting.rows }})</dd>
+        <dt>Sheets needed</dt><dd class="num" data-testid="nesting-sheets">{{ nesting.sheets }}</dd>
+        <dt>Utilisation</dt><dd class="num">{{ (nesting.utilization * 100).toFixed(1) }}%</dd>
+      </dl>
+    } @else if (draft.material()) {
+      <div class="alert alert-warn" role="alert" data-testid="nesting-blocked">
+        <span aria-hidden="true">!</span>
+        <span>This part is {{ draft.partWidthMm() }} × {{ draft.partHeightMm() }} mm and will not fit the selected sheet. Pick a larger sheet material.</span>
+      </div>
+    } @else {
+      <p class="hint">Select a material to see how the parts nest.</p>
+    }
+  </aside>
+</section>

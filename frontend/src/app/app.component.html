@@ -1,0 +1,58 @@
+<!-- data-testid="app-ready" is the readiness landmark: it enters the DOM only once
+     Angular has bootstrapped this root component. Keep it here. -->
+<div data-testid="app-ready" class="shell" [class.chromeless]="chromeless()">
+  @if (!chromeless()) {
+    <aside class="sidebar" data-testid="app-sidebar">
+      <a class="brand" routerLink="/quote/new/upload">
+        <span class="brand-mark" aria-hidden="true">◈</span>
+        <span class="brand-text">
+          <strong>{{ business()?.companyName || 'CNC Quick Quote' }}</strong>
+          <small>Instant laser quoting</small>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        @for (item of visibleNav(); track item.route) {
+          <a class="nav-item" [routerLink]="item.route" routerLinkActive="active"
+             [attr.data-testid]="'nav-' + item.short.toLowerCase()">
+            <span class="glyph" aria-hidden="true">{{ item.glyph }}</span>{{ item.label }}
+          </a>
+        }
+      </nav>
+
+      <div class="side-foot">
+        <div class="who">
+          <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+          <span class="who-text">
+            <strong>{{ auth.user()?.name || 'Guest' }}</strong>
+            <small>{{ auth.user()?.email }}</small>
+          </span>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm btn-block"
+                data-testid="sign-out" (click)="auth.logout()">Sign out</button>
+      </div>
+    </aside>
+
+    <header class="topbar" data-testid="app-topbar">
+      <span class="brand-mark" aria-hidden="true">◈</span>
+      <strong>{{ business()?.companyName || 'CNC Quick Quote' }}</strong>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-quiet btn-sm" data-testid="sign-out-mobile"
+              (click)="auth.logout()">Sign out</button>
+    </header>
+  }
+
+  <main class="content"><router-outlet /></main>
+
+  @if (!chromeless()) {
+    <nav class="tabbar" aria-label="Main" data-testid="app-tabbar">
+      @for (item of visibleNav(); track item.route) {
+        <a class="tab" [routerLink]="item.route" routerLinkActive="active"
+           [attr.data-testid]="'tab-' + item.short.toLowerCase()">
+          <span class="glyph" aria-hidden="true">{{ item.glyph }}</span>
+          <span class="tab-label">{{ item.short }}</span>
+        </a>
+      }
+    </nav>
+  }
+</div>

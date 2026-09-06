@@ -1,0 +1,70 @@
+<section class="layout" data-testid="result-step">
+  <div class="card card-pad bed-card">
+    <div class="card-title">
+      <div>
+        <h2>Work bed</h2>
+        <p class="hint">The laser head traces the real cut path for this nest.</p>
+      </div>
+      @if (sheets().length > 1) {
+        <div class="sheet-switch" role="group" aria-label="Sheet">
+          @for (index of sheets(); track index) {
+            <button type="button" [class.on]="index === sheetIndex()"
+                    [attr.data-testid]="'sheet-tab-' + index" (click)="sheetIndex.set(index)">
+              Sheet {{ index + 1 }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    @if (draft.nesting(); as nesting) {
+      @if (draft.material(); as material) {
+        @if (draft.drawing(); as drawing) {
+          <app-workbed
+            [paths]="drawing.paths" [bbox]="drawing.bbox" [nesting]="nesting"
+            [material]="material" [machine]="machine()" [bends]="draft.bends()"
+            [sheetIndex]="sheetIndex()" />
+        }
+      }
+      <ul class="stats" data-testid="nesting-stats">
+        <li><span>Sheets</span><b class="num">{{ nesting.sheets }}</b></li>
+        <li><span>Per sheet</span><b class="num">{{ nesting.perSheet }}</b></li>
+        <li><span>Grid</span><b class="num">{{ nesting.cols }} × {{ nesting.rows }}</b></li>
+        <li><span>Utilisation</span><b class="num">{{ (nesting.utilization * 100).toFixed(1) }}%</b></li>
+      </ul>
+    } @else {
+      <div class="alert alert-warn" role="alert" data-testid="result-blocked">
+        <span aria-hidden="true">!</span>
+        <span>This part does not fit any sheet of the selected material, so it cannot be quoted. Go back and choose a larger sheet.</span>
+      </div>
+    }
+  </div>
+
+  <aside class="card price-card">
+    <div class="card-head"><h2>Your quote</h2></div>
+    @if (draft.priceResult(); as result) {
+      <ul class="lines" data-testid="price-breakdown">
+        @for (line of result.lines; track line.label) {
+          <li>
+            <span class="l-label"><strong>{{ line.label }}</strong><small>{{ line.detail }}</small></span>
+            <span class="num l-amount">{{ line.amountCents | money }}</span>
+          </li>
+        }
+      </ul>
+      <div class="total">
+        <span>Total</span>
+        <strong class="num" data-testid="quote-total">{{ result.totalCents | money }}</strong>
+      </div>
+      <p class="fine">
+        {{ draft.quantity() }} × {{ draft.drawing()?.filename }} in {{ draft.material()?.name }}.
+        Price is locked when you continue.
+      </p>
+      <div class="cta">
+        <button type="button" class="btn btn-primary btn-block" data-testid="proceed-to-checkout"
+                (click)="proceed()">Proceed to checkout</button>
+      </div>
+    } @else {
+      <p class="fine">Complete the earlier steps to see an itemised price.</p>
+    }
+  </aside>
+</section>

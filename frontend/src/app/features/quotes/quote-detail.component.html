@@ -1,0 +1,107 @@
+<section class="page" data-testid="quote-detail-page">
+  @if (quote(); as quote) {
+    <header class="page-head">
+      <div>
+        <p class="eyebrow"><a routerLink="/quotes" data-testid="quote-detail-back">Quotes</a> · {{ quote.id }}</p>
+        <h1>{{ quote.drawingName }}</h1>
+        <p>
+          Quoted {{ quote.createdAt | date: 'd MMM y, HH:mm' }} ·
+          <strong class="num">{{ quote.totalCents | money }}</strong> for {{ quote.quantity }} parts
+        </p>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btn-ghost" data-testid="quote-detail-panel-open"
+                (click)="openPanel()">Sheet layout</button>
+        <a class="btn btn-primary" [routerLink]="['/checkout', quote.id, 'review']"
+           data-testid="proceed-to-checkout">Proceed to checkout</a>
+      </div>
+    </header>
+
+    <div class="layout">
+      <div class="stack">
+        <section class="card" data-testid="quote-detail-breakdown">
+          <div class="card-head"><h2>Price breakdown</h2></div>
+          <ul class="lines">
+            @for (line of quote.breakdown; track line.label) {
+              <li>
+                <span class="l-label"><strong>{{ line.label }}</strong><small>{{ line.detail }}</small></span>
+                <span class="num l-amount">{{ line.amountCents | money }}</span>
+              </li>
+            }
+          </ul>
+          <div class="total">
+            <span>Total</span>
+            <strong class="num" data-testid="quote-detail-total">{{ quote.totalCents | money }}</strong>
+          </div>
+          <p class="fine">Locked at the time of quoting. Re-quote to price against current material rates.</p>
+        </section>
+
+        <section class="card card-pad" data-testid="quote-detail-nesting">
+          <div class="card-title">
+            <h2>Nesting</h2>
+            <button type="button" class="btn btn-quiet btn-sm" (click)="openPanel()">Per-sheet counts</button>
+          </div>
+          <ul class="stats">
+            <li><span>Sheets</span><b class="num">{{ quote.nesting.sheets }}</b></li>
+            <li><span>Per sheet</span><b class="num">{{ quote.nesting.perSheet }}</b></li>
+            <li><span>Grid</span><b class="num">{{ quote.nesting.cols }} × {{ quote.nesting.rows }}</b></li>
+            <li><span>Utilisation</span><b class="num">{{ (quote.nesting.utilization * 100).toFixed(1) }}%</b></li>
+          </ul>
+          <p class="fine flush">
+            {{ quote.quantity }} parts nest {{ quote.nesting.cols }} across by {{ quote.nesting.rows }} down,
+            filling {{ (quote.nesting.utilization * 100).toFixed(1) }}% of the sheet area.
+          </p>
+        </section>
+      </div>
+
+      <aside class="card card-pad side">
+        <h2>Job details</h2>
+        <dl class="dl">
+          <dt>Quote</dt><dd class="mono">{{ quote.id }}</dd>
+          <dt>Drawing</dt><dd>{{ quote.drawingName }}</dd>
+          <dt>Material</dt><dd>{{ quote.materialName }}</dd>
+          <dt>Quantity</dt><dd class="num">{{ quote.quantity }} parts</dd>
+          <dt>Cut length</dt><dd class="num">{{ quote.cutLengthMm.toFixed(1) }} mm per part · {{ totalCutMetres() }} m total</dd>
+          <dt>Bends</dt><dd class="num">{{ quote.bendCount }} per part</dd>
+          <dt>Created</dt><dd class="num">{{ quote.createdAt | date: 'd MMM y' }}</dd>
+        </dl>
+        <a class="btn btn-primary btn-block cta" [routerLink]="['/checkout', quote.id, 'review']">Proceed to checkout</a>
+        <a class="btn btn-quiet btn-block" routerLink="/quotes">Back to all quotes</a>
+      </aside>
+    </div>
+
+    @if (panelOpen()) {
+      <div class="pane-scrim" data-testid="quote-nesting-scrim" (click)="closePanel()"></div>
+      <aside class="pane" role="dialog" aria-label="Sheet layout" data-testid="quote-nesting-panel">
+        <div class="pane-head">
+          <div>
+            <h2>Sheet layout</h2>
+            <p class="fine flush">{{ quote.nesting.perSheet }} parts fit on a full sheet.</p>
+          </div>
+          <button type="button" class="btn btn-quiet btn-sm" data-testid="quote-nesting-close"
+                  (click)="closePanel()">Close</button>
+        </div>
+        <ul class="sheets" data-testid="quote-nesting-sheets">
+          @for (tally of sheetTallies(); track tally.sheet) {
+            <li>
+              <span>Sheet {{ tally.sheet }}</span>
+              <b class="num">{{ tally.parts }} {{ tally.parts === 1 ? 'part' : 'parts' }}</b>
+            </li>
+          }
+        </ul>
+        <p class="fine">
+          Sheets are filled in order, so only the last sheet runs part-full — that is what the
+          {{ (quote.nesting.utilization * 100).toFixed(1) }}% utilisation figure reflects.
+        </p>
+      </aside>
+    }
+  } @else {
+    <app-state-panel
+      state="error"
+      testid="quote-detail"
+      heading="Quote not found"
+      message="This quote does not exist, or it belongs to another account.">
+      <a panelAction class="btn btn-ghost btn-sm" routerLink="/quotes">Back to all quotes</a>
+    </app-state-panel>
+  }
+</section>

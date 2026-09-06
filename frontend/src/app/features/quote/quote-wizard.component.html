@@ -1,0 +1,37 @@
+<div class="wizard" data-testid="quote-wizard">
+  <header class="wiz-head">
+    <div>
+      <p class="eyebrow">New quote</p>
+      <h1>Price a laser-cut part</h1>
+    </div>
+    <span class="badge badge-muted">Step {{ activeIndex() + 1 }} of {{ steps.length }}</span>
+  </header>
+
+  <ol class="steps" data-testid="wizard-steps">
+    @for (step of steps; track step.key; let i = $index) {
+      <li class="step" [class.active]="i === activeIndex()" [class.done]="i < activeIndex()">
+        <button type="button" (click)="go(i)" [disabled]="!reachable(i)"
+                [attr.data-testid]="'wizard-step-' + step.key"
+                [attr.aria-current]="i === activeIndex() ? 'step' : null">
+          <span class="dot" aria-hidden="true">{{ i < activeIndex() ? '✓' : i + 1 }}</span>
+          <span class="step-label">{{ step.label }}</span>
+        </button>
+      </li>
+    }
+  </ol>
+
+  <div class="wiz-body"><router-outlet /></div>
+
+  <footer class="wiz-foot">
+    <button type="button" class="btn btn-ghost" data-testid="wizard-back"
+            [disabled]="activeIndex() === 0" (click)="back()">Back</button>
+    <span class="spacer"></span>
+    @if (activeIndex() < steps.length - 1) {
+      @if (!canAdvance()) {
+        <span class="blocked" data-testid="wizard-blocked">{{ blockedReason() }}</span>
+      }
+      <button type="button" class="btn btn-primary" data-testid="wizard-next"
+              [disabled]="!canAdvance()" (click)="next()">Continue</button>
+    }
+  </footer>
+</div>

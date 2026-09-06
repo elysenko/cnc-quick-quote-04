@@ -1,0 +1,175 @@
+<section class="stack" data-testid="admin-materials-page">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>Materials</h2>
+        <p class="hint">Only active materials are quotable. The cost multiplier scales the per-linear-foot cutting rate.</p>
+      </div>
+      <button type="button" class="btn btn-primary" data-testid="add-material" (click)="openNew()">
+        Add material
+      </button>
+    </div>
+
+    @if (materials().length === 0) {
+      <app-state-panel
+        state="empty"
+        testid="materials"
+        heading="No materials yet"
+        message="Add at least one active material — until then customers cannot price a part.">
+        <button panelAction type="button" class="btn btn-primary btn-sm"
+                data-testid="materials-empty-add" (click)="openNew()">Add material</button>
+      </app-state-panel>
+    } @else {
+      <div data-testid="materials-table">
+        <div class="table-wrap desktop-only">
+          <table class="data">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Thickness (mm)</th>
+                <th scope="col">Sheet W × H (mm)</th>
+                <th scope="col">Cost multiplier</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (material of materials(); track material.id) {
+                <tr [attr.data-testid]="'material-row-' + material.id">
+                  <td><strong>{{ material.name }}</strong></td>
+                  <td class="num">{{ material.thicknessMm.toFixed(1) }}</td>
+                  <td class="num">{{ material.sheetWMm }} × {{ material.sheetHMm }}</td>
+                  <td class="num">{{ material.costMultiplier.toFixed(2) }}×</td>
+                  <td>
+                    @if (material.isActive) {
+                      <span class="badge badge-ok">Active</span>
+                    } @else {
+                      <span class="badge badge-muted">Inactive</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="acts">
+                      <button type="button" class="btn btn-ghost btn-sm"
+                              [attr.data-testid]="'edit-material-' + material.id"
+                              (click)="openEdit(material)">Edit</button>
+                      <button type="button" class="btn btn-quiet btn-sm danger"
+                              [attr.data-testid]="'delete-material-' + material.id"
+                              (click)="openDelete(material)">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <ul class="cards mobile-only">
+          @for (material of materials(); track material.id) {
+            <li class="m-card" [attr.data-testid]="'material-card-' + material.id">
+              <div class="m-top">
+                <strong>{{ material.name }}</strong>
+                @if (material.isActive) {
+                  <span class="badge badge-ok">Active</span>
+                } @else {
+                  <span class="badge badge-muted">Inactive</span>
+                }
+              </div>
+              <dl class="dl">
+                <dt>Thickness</dt><dd class="num">{{ material.thicknessMm.toFixed(1) }} mm</dd>
+                <dt>Sheet</dt><dd class="num">{{ material.sheetWMm }} × {{ material.sheetHMm }} mm</dd>
+                <dt>Multiplier</dt><dd class="num">{{ material.costMultiplier.toFixed(2) }}×</dd>
+              </dl>
+              <div class="acts">
+                <button type="button" class="btn btn-ghost btn-sm" (click)="openEdit(material)">Edit</button>
+                <button type="button" class="btn btn-quiet btn-sm danger" (click)="openDelete(material)">Delete</button>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </div>
+</section>
+
+@if (mode() === 'new' || mode() === 'edit') {
+  <app-modal
+    [heading]="mode() === 'edit' ? 'Edit material' : 'Add material'"
+    subheading="Sheet size drives nesting; the multiplier scales the cutting rate."
+    testid="material-modal"
+    (dismissed)="close()">
+
+    <div class="field">
+      <label for="mat-name">Name</label>
+      <input id="mat-name" type="text" data-testid="material-name"
+             placeholder="Mild steel 2.0 mm"
+             [value]="form().name" (input)="patch({ name: $any($event.target).value })" />
+    </div>
+
+    <div class="pair">
+      <div class="field">
+        <label for="mat-thickness">Thickness (mm)</label>
+        <input id="mat-thickness" type="number" inputmode="decimal" step="0.1" min="0"
+               data-testid="material-thickness"
+               [value]="form().thicknessMm" (input)="patchNumber('thicknessMm', $any($event.target).value)" />
+      </div>
+      <div class="field">
+        <label for="mat-multiplier">Cost multiplier</label>
+        <input id="mat-multiplier" type="number" inputmode="decimal" step="0.05" min="0"
+               data-testid="material-multiplier"
+               [value]="form().costMultiplier" (input)="patchNumber('costMultiplier', $any($event.target).value)" />
+        <span class="hint">1.00× is the base cutting rate.</span>
+      </div>
+    </div>
+
+    <div class="pair">
+      <div class="field">
+        <label for="mat-width">Sheet width (mm)</label>
+        <input id="mat-width" type="number" inputmode="numeric" step="1" min="0"
+               data-testid="material-width"
+               [value]="form().sheetWMm" (input)="patchNumber('sheetWMm', $any($event.target).value)" />
+      </div>
+      <div class="field">
+        <label for="mat-height">Sheet height (mm)</label>
+        <input id="mat-height" type="number" inputmode="numeric" step="1" min="0"
+               data-testid="material-height"
+               [value]="form().sheetHMm" (input)="patchNumber('sheetHMm', $any($event.target).value)" />
+      </div>
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" data-testid="material-active"
+             [checked]="form().isActive" (change)="patch({ isActive: $any($event.target).checked })" />
+      <span>Active — customers can quote this material</span>
+    </label>
+
+    @if (formError(); as message) {
+      <p class="error-text" data-testid="material-form-error">{{ message }}</p>
+    }
+
+    <button modalActions type="button" class="btn btn-ghost"
+            data-testid="material-cancel" (click)="close()">Cancel</button>
+    <button modalActions type="button" class="btn btn-primary"
+            data-testid="material-save" [disabled]="formError() !== null" (click)="save()">
+      {{ mode() === 'edit' ? 'Save changes' : 'Add material' }}
+    </button>
+  </app-modal>
+}
+
+@if (mode() === 'delete') {
+  <app-modal heading="Delete material?" testid="material-delete-modal" (dismissed)="close()">
+    @if (target(); as material) {
+      <p>
+        <strong>{{ material.name }}</strong> ({{ material.thicknessMm.toFixed(1) }} mm,
+        sheet {{ material.sheetWMm }} × {{ material.sheetHMm }} mm) will be removed from the stock list.
+      </p>
+      <p class="hint">Existing quotes keep the material they were priced against. Deactivate instead if you may stock it again.</p>
+    } @else {
+      <p class="hint">That material is no longer in the list.</p>
+    }
+
+    <button modalActions type="button" class="btn btn-ghost"
+            data-testid="delete-cancel" (click)="close()">Keep material</button>
+    <button modalActions type="button" class="btn btn-danger"
+            data-testid="delete-confirm" [disabled]="target() === null" (click)="confirmDelete()">Delete material</button>
+  </app-modal>
+}

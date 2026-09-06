@@ -73,6 +73,10 @@
               "sourceMap": false,
               "define": {
                 "COLOSSUS_PREVIEW": "true"
+              },
+              "outputPath": {
+                "base": "dist/mockup",
+                "browser": ""
               }
             }
           },

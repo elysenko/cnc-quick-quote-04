@@ -1,0 +1,37 @@
+/* Progress header — kept byte-identical across the checkout screens. */
+.steps { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--space-2); margin-bottom: var(--space-5); }
+.step-body {
+  display: flex; align-items: center; gap: var(--space-2); width: 100%;
+  min-height: var(--tap-min); padding: var(--space-2) var(--space-3);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: 600;
+  color: var(--color-text-muted); text-decoration: none;
+}
+a.step-body:hover { background: var(--color-surface-alt); text-decoration: none; }
+.step.active .step-body { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary); }
+.step.done .step-body { color: var(--color-success); border-color: var(--color-success-border); }
+.dot {
+  display: grid; place-items: center; flex: 0 0 auto; width: 24px; height: 24px;
+  border-radius: var(--radius-pill); background: var(--color-surface-sunken);
+  font-size: var(--text-xs); font-weight: 800;
+}
+.step.active .dot { background: var(--color-primary); color: var(--color-primary-contrast); }
+.step.done .dot { background: var(--color-success-soft); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: var(--space-4); align-items: start; }
+
+.lines li { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-border); }
+.l-label { display: flex; flex-direction: column; }
+.l-label small { font-size: var(--text-xs); color: var(--color-text-muted); }
+.l-amount { font-weight: 600; white-space: nowrap; }
+.total { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-5); background: var(--color-surface-alt); font-size: var(--text-md); }
+.total strong { font-size: var(--text-lg); }
+.fine { margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); }
+.price-card .fine { padding: var(--space-3) var(--space-5) 0; }
+.cta { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4) var(--space-5) var(--space-5); }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  .step-label { display: none; }
+  .step-body { justify-content: center; padding: var(--space-2); }
+}

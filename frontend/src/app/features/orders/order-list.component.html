@@ -1,0 +1,81 @@
+<section class="page" data-testid="order-list-page">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Orders</p>
+      <h1>Your orders</h1>
+      <p>Paid jobs and their confirmation numbers. Quote a new part any time — pricing is instant.</p>
+    </div>
+    <a class="btn btn-ghost" routerLink="/quote/new/upload" data-testid="order-list-new">New quote</a>
+  </header>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>{{ total() }} {{ total() === 1 ? 'order' : 'orders' }}</h2>
+      <div class="segmented" role="group" aria-label="Filter by status" data-testid="orders-status-filter">
+        @for (option of statusOptions; track option.value) {
+          <button type="button" [class.on]="option.value === status()"
+                  [attr.aria-pressed]="option.value === status()"
+                  [attr.data-testid]="'orders-filter-' + option.value.toLowerCase()"
+                  (click)="setStatus(option.value)">
+            {{ option.label }} <span class="num count">{{ countFor(option.value) }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="panel-pad">
+        <app-state-panel state="loading" testid="orders" message="Fetching your orders…" />
+      </div>
+    } @else if (loadError()) {
+      <div class="panel-pad">
+        <app-state-panel state="error" testid="orders" heading="Orders could not be loaded" [message]="loadError() ?? ''">
+          <a panelAction class="btn btn-ghost btn-sm" routerLink="/orders">Try again</a>
+        </app-state-panel>
+      </div>
+    } @else if (visible().length === 0) {
+      <div class="panel-pad">
+        @if (total() === 0) {
+          <app-state-panel
+            state="empty"
+            testid="orders"
+            heading="No orders yet"
+            message="Once you check out a quote, the order and its confirmation number appear here.">
+            <a panelAction class="btn btn-primary btn-sm" routerLink="/quote/new/upload">Start a quote</a>
+          </app-state-panel>
+        } @else {
+          <app-state-panel
+            state="empty"
+            testid="orders"
+            heading="Nothing matches this filter"
+            message="You have no orders with that status. Clear the filter to see all of them.">
+            <button panelAction type="button" class="btn btn-ghost btn-sm" (click)="setStatus('all')">Show all orders</button>
+          </app-state-panel>
+        }
+      </div>
+    } @else {
+      <ul class="orders" data-testid="orders-list">
+        @for (order of visible(); track order.id) {
+          <li class="ocard" [attr.data-testid]="'order-row-' + order.id">
+            <div class="ocard-main">
+              <div class="ocard-head">
+                <strong class="mono">{{ order.orderNumber }}</strong>
+                <span [class]="badgeClass(order.status)">{{ statusLabel(order.status) }}</span>
+              </div>
+              <p class="summary">{{ order.itemSummary }}</p>
+              <p class="meta num">
+                Confirmation <span class="mono">{{ order.confirmationNumber }}</span> ·
+                placed {{ order.createdAt | date: 'd MMM y' }} · {{ order.shippingMethodName }}
+              </p>
+            </div>
+            <div class="ocard-side">
+              <strong class="num amount">{{ order.totalCents | money }}</strong>
+              <a class="btn btn-ghost btn-sm" [routerLink]="['/orders', order.id, 'confirmation']"
+                 [attr.data-testid]="'order-view-' + order.id">View confirmation</a>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</section>

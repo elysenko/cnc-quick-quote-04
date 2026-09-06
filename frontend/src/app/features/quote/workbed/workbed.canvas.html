@@ -1,0 +1,10 @@
+<div class="stage-wrap">
+  <canvas #stage data-testid="workbed-canvas" aria-label="Machine bed showing the nested parts and laser cut path"></canvas>
+</div>
+<div class="bed-bar">
+  <button type="button" class="btn btn-accent btn-sm" data-testid="print-bed-toggle" (click)="togglePrint()">
+    {{ running() ? 'Stop and reset' : 'Print bed' }}
+  </button>
+  <span class="legend"><i class="swatch cut" aria-hidden="true"></i>Cut path</span>
+  <span class="legend"><i class="swatch bend" aria-hidden="true"></i>Bend line</span>
+</div>
