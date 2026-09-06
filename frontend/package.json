@@ -20,8 +20,8 @@
     "@trpc/client": "^11.17.0",
     "ngx-trpc": "^1.14.0",
     "rxjs": "~7.8.0",
-    "zone.js": "~0.15.0",
-    "zod": "^3.23.0"
+    "zod": "^3.23.0",
+    "zone.js": "~0.15.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^19.2.0",
@@ -29,6 +29,7 @@
     "@angular/compiler": "^19.2.0",
     "@angular/compiler-cli": "^19.2.0",
     "@types/node": "^20.0.0",
-    "typescript": "~5.7.0"
+    "typescript": "~5.7.0",
+    "vitest": "^2.1.9"
   }
 }

@@ -67,6 +67,10 @@ export interface Quote {
   nesting: Nesting;
   totalCents: number;
   createdAt: string;
+  /** Delivery choice saved against the quote during checkout; null until the shipping step. */
+  shippingMethodId: string | null;
+  shippingCents: number | null;
+  shippingAddress: Address | null;
 }
 
 export interface ShippingMethod {
